@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vienna Swim Dashboard</title>
+<meta name="theme-color" content="#0b1620">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Swim Wien">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230b1620'/%3E%3Cpath d='M20 108c12 0 12-10 25-10s13 10 25 10 12-10 25-10 13 10 25 10 12-10 25-10 13 10 25 10' stroke='%2338d0c8' stroke-width='11' fill='none' stroke-linecap='round'/%3E%3Cpath d='M20 138c12 0 12-10 25-10s13 10 25 10 12-10 25-10 13 10 25 10 12-10 25-10 13 10 25 10' stroke='%236fd6ff' stroke-width='11' fill='none' stroke-linecap='round' opacity='.65'/%3E%3Ccircle cx='118' cy='55' r='15' fill='%2338d0c8'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1620'/%3E%3Cpath d='M8 38c4 0 4-4 9-4s5 4 9 4 4-4 9-4 5 4 9 4 4-4 9-4' stroke='%2338d0c8' stroke-width='4.5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M8 49c4 0 4-4 9-4s5 4 9 4 4-4 9-4 5 4 9 4 4-4 9-4' stroke='%236fd6ff' stroke-width='4.5' fill='none' stroke-linecap='round' opacity='.6'/%3E%3Ccircle cx='42' cy='19' r='5.5' fill='%2338d0c8'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0b1620; --bg2:#0f1e2b; --card:#14283a; --card2:#173049;
+    --line:#23415c; --txt:#e8f2f8; --dim:#93b1c6; --dim2:#6b8ba3;
+    --accent:#38d0c8; --accent2:#6fd6ff;
+    --ok:#3ec98a; --warn:#f5b642; --bad:#f2685f; --off:#5a7288;
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:linear-gradient(180deg,#0b1620 0%, #0d1c28 40%, #0b1620 100%);
+    color:var(--txt);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .wrap{max-width:1320px;margin:0 auto;padding:22px 18px 70px}
+
+  /* header */
+  header{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+  h1{margin:0;font-size:26px;letter-spacing:-.4px;font-weight:700}
+  h1 span{color:var(--accent)}
+  .sub{color:var(--dim);font-size:13.5px;margin-top:4px}
+  .sub b{color:var(--txt);font-weight:600}
+  .livebox{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:12.5px;color:var(--dim)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--off);flex:none}
+  .dot.live{background:var(--ok);box-shadow:0 0 0 0 rgba(62,201,138,.6);animation:pulse 2.2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(62,201,138,.5)}70%{box-shadow:0 0 0 9px rgba(62,201,138,0)}100%{box-shadow:0 0 0 0 rgba(62,201,138,0)}}
+  .btn{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:6px 12px;font-size:12.5px;cursor:pointer;font-family:inherit}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* controls */
+  .controls{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:18px;position:sticky;top:0;z-index:20;backdrop-filter:blur(8px);background:rgba(20,40,58,.94)}
+  .crow{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+  .crow + .crow{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim2);margin-right:2px;font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:transparent;border:1px solid var(--line);color:var(--dim);border-radius:999px;padding:5px 12px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.15s}
+  .chip:hover{color:var(--txt);border-color:var(--dim2)}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#06222a;font-weight:600}
+  .chip .n{opacity:.6;font-size:11px;margin-left:4px;font-variant-numeric:tabular-nums}
+  .chip.zero{opacity:.34;text-decoration:line-through;text-decoration-thickness:1px}
+  .chip.zero:hover{color:var(--dim);border-color:var(--line)}
+  .empty{grid-column:1/-1;text-align:center;padding:44px 24px;background:var(--card);border:1px dashed var(--line);border-radius:var(--r)}
+  .empty h3{margin:0 0 8px;font-size:17px;color:var(--txt);font-weight:600}
+  .empty p{margin:0 0 16px;color:var(--dim);font-size:13.5px;line-height:1.6}
+  .empty .why{color:var(--warn)}
+  input[type=range]{accent-color:var(--accent);width:130px;vertical-align:middle}
+  select{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:5px 9px;font-family:inherit;font-size:12.5px}
+  .count{margin-left:auto;color:var(--dim2);font-size:12.5px}
+
+  /* grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 17px 14px;display:flex;flex-direction:column;gap:11px;transition:.15s;position:relative;overflow:hidden}
+  .card:hover{border-color:#315c80;transform:translateY(-2px)}
+  .card.shut{opacity:.55}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--off)}
+  .card.s-ok::before{background:var(--ok)} .card.s-warn::before{background:var(--warn)}
+  .card.s-bad::before{background:var(--bad)} .card.s-none::before{background:var(--off)}
+
+  .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .nm{font-size:17px;font-weight:650;letter-spacing:-.2px;line-height:1.25}
+  .addr{font-size:12.5px;color:var(--dim2);margin-top:3px}
+  .tt{text-align:right;flex:none}
+  .tt .big{font-size:21px;font-weight:700;color:var(--accent2);line-height:1}
+  .tt .u{font-size:10.5px;color:var(--dim2);text-transform:uppercase;letter-spacing:.6px;margin-top:3px}
+
+  .status{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:13px}
+  .sdot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--off)}
+  .s-ok .sdot{background:var(--ok)} .s-warn .sdot{background:var(--warn)} .s-bad .sdot{background:var(--bad)}
+  .status .txt{font-weight:600}
+  .status .sm{color:var(--dim2);font-size:11.5px;margin-left:auto;text-align:right;line-height:1.3}
+
+  .openrow{display:flex;align-items:center;gap:8px;font-size:13px}
+  .pill{font-size:11px;font-weight:700;letter-spacing:.4px;padding:3px 9px;border-radius:999px;text-transform:uppercase;flex:none}
+  .pill.open{background:rgba(62,201,138,.16);color:var(--ok)}
+  .pill.closed{background:rgba(242,104,95,.14);color:var(--bad)}
+  .pill.soon{background:rgba(245,182,66,.16);color:var(--warn)}
+  .openrow .h{color:var(--dim);font-size:12.5px}
+
+  .route{font-size:12.5px;color:var(--dim);background:var(--bg2);border-radius:9px;padding:8px 11px;border:1px solid var(--line)}
+  .route b{color:var(--accent2);font-weight:600}
+
+  .tags{display:flex;flex-wrap:wrap;gap:5px}
+  .tag{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--card2);color:var(--dim);border:1px solid var(--line)}
+  .tag.hi{background:rgba(56,208,200,.12);color:var(--accent);border-color:rgba(56,208,200,.3)}
+  .tag.pr{background:rgba(111,214,255,.1);color:var(--accent2);border-color:rgba(111,214,255,.25);font-weight:600}
+  .tag.shutx{background:rgba(242,104,95,.12);color:var(--bad);border-color:rgba(242,104,95,.3);font-weight:600}
+  .tag.inc{background:rgba(62,201,138,.14);color:var(--ok);border-color:rgba(62,201,138,.32);font-weight:700}
+  .tag.been{background:rgba(111,214,255,.1);color:var(--accent2);border-color:rgba(111,214,255,.25)}
+  button.lk{font-family:inherit;cursor:pointer}
+  button.lk:hover{color:var(--ok);border-color:var(--ok)}
+
+  /* season-pass tracker */
+  .passbox{background:linear-gradient(135deg,rgba(62,201,138,.09),rgba(56,208,200,.05));
+    border:1px solid rgba(62,201,138,.3);border-radius:var(--r);padding:14px 17px;margin-bottom:16px}
+  .prow{display:flex;flex-wrap:wrap;gap:18px;align-items:center}
+  .plabel{font-size:15px;font-weight:700;color:var(--ok)}
+  .pmeta{font-size:12px;color:var(--dim2);margin-top:2px}
+  .pnum{text-align:right;margin-left:auto}
+  .pnum + .pnum{margin-left:0}
+  .pv{display:block;font-size:20px;font-weight:700;color:var(--txt);line-height:1.1}
+  .pu{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--dim2);margin-top:2px}
+  .pbar{height:6px;background:var(--bg2);border-radius:3px;margin:12px 0 9px;overflow:hidden}
+  .pbar i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .4s}
+  .pbar i.done{background:var(--ok)}
+  .pverdict{font-size:13px;color:var(--dim)}
+  .pverdict b{color:var(--txt)} .pverdict b.good{color:var(--ok)}
+  .pwarn{font-size:11.5px;color:var(--warn);margin-top:7px}
+  @media(max-width:640px){.prow{gap:10px}.pnum{margin-left:0}.pv{font-size:17px}}
+
+  .note{font-size:12px;color:var(--warn);background:rgba(245,182,66,.09);border:1px solid rgba(245,182,66,.25);border-radius:8px;padding:7px 10px}
+  .note.bad{color:var(--bad);background:rgba(242,104,95,.09);border-color:rgba(242,104,95,.25)}
+
+  .fc{display:flex;gap:5px;align-items:center;font-size:11px;color:var(--dim2)}
+  .fc .d{flex:1;text-align:center;border-radius:6px;padding:4px 2px;background:var(--bg2);border:1px solid var(--line)}
+  .fc .d .dl{display:block;font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--dim2)}
+  .fc .d .dt{display:block;font-size:11px;font-weight:600;color:var(--dim);margin-top:1px}
+  .fc .d .dv{display:block;width:100%;height:4px;border-radius:2px;margin-top:4px;background:var(--off)}
+  .fc .d.k1 .dv{background:var(--ok)} .fc .d.k2 .dv{background:var(--warn)} .fc .d.k3 .dv{background:var(--bad)}
+
+  /* weather */
+  .wx{display:flex;align-items:center;gap:9px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:7px 11px;font-size:12.5px;color:var(--dim)}
+  .wx .t{font-weight:700;color:var(--accent2);font-size:14px}
+  .wx .r{margin-left:auto;font-size:11.5px;color:var(--dim2)}
+  .wx.hot{border-color:rgba(245,182,66,.4);background:rgba(245,182,66,.08)}
+  .wx.hot .t{color:var(--warn)}
+  .wx.wet{border-color:rgba(111,214,255,.35);background:rgba(111,214,255,.07)}
+  .banner{display:flex;gap:12px;align-items:center;background:rgba(245,182,66,.1);border:1px solid rgba(245,182,66,.32);border-radius:var(--r);padding:12px 16px;margin-bottom:16px;font-size:13.5px;color:#f7cd7c}
+  .banner b{color:var(--warn)}
+  .banner .em{font-size:22px;flex:none;line-height:1}
+
+  .links{display:flex;gap:7px;margin-top:auto;padding-top:3px}
+  .lk{flex:1;text-align:center;font-size:12px;padding:7px 6px;border-radius:9px;text-decoration:none;background:var(--card2);color:var(--dim);border:1px solid var(--line);transition:.15s}
+  .lk:hover{color:var(--accent);border-color:var(--accent)}
+  .lk.go{background:rgba(56,208,200,.13);color:var(--accent);border-color:rgba(56,208,200,.3)}
+
+  footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);color:var(--dim2);font-size:12px;line-height:1.7}
+  footer a{color:var(--dim);text-decoration:none;border-bottom:1px dotted var(--dim2)}
+  footer a:hover{color:var(--accent)}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:10px;font-size:12px;color:var(--dim)}
+  .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+  @media(max-width:640px){
+    .wrap{padding:14px 11px 50px}
+    h1{font-size:21px} .sub{font-size:12px}
+    header{gap:9px;margin-bottom:12px}
+    .livebox{padding:5px 11px;font-size:11.5px} .btn{padding:5px 10px;font-size:11.5px}
+    .grid{grid-template-columns:1fr;gap:11px}
+    .controls{padding:10px 11px;margin-bottom:12px;position:sticky;top:0;max-height:44vh;overflow-y:auto}
+    .crow{gap:7px} .crow + .crow{margin-top:8px;padding-top:8px}
+    .lbl{font-size:10px;width:100%;margin-bottom:-2px}
+    .chip{padding:4px 10px;font-size:12px}
+    .chips{gap:5px}
+    input[type=range]{flex:1;min-width:110px}
+    .count{width:100%;margin-left:0;text-align:right}
+    .legend{gap:8px 14px;font-size:11.5px;margin-bottom:8px}
+    .banner{padding:10px 13px;font-size:12.5px;gap:9px}
+    .card{padding:14px 14px 12px}
+    .tt .big{font-size:19px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>Vienna <span>Swim</span> Dashboard</h1>
+    <div class="sub">From the <b>1st district</b> (Karlsplatz / Oper) · live occupancy from the official Bäderampel · <span id="today"></span></div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <div class="livebox"><span class="dot" id="ldot"></span><span id="lstat">Loading live data…</span></div>
+    <button class="btn" id="refresh">↻ Refresh</button>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="crow">
+    <span class="lbl">Show</span>
+    <div class="chips" id="fType">
+      <button class="chip on" data-v="all">All</button>
+      <button class="chip" data-v="indoor">Indoor</button>
+      <button class="chip" data-v="outdoor">Outdoor</button>
+      <button class="chip" data-v="open-water">Lake / river</button>
+      <button class="chip" data-v="spa">Spa &amp; gym</button>
+      <button class="chip" data-v="wellness">Sauna only</button>
+    </div>
+    <span class="lbl">Need</span>
+    <div class="chips" id="fFeat">
+      <button class="chip" data-v="lap">Lap swimming</button>
+      <button class="chip" data-v="sauna">Sauna</button>
+      <button class="chip" data-v="pass">In my pass</button>
+      <button class="chip" data-v="cheap">Under €12</button>
+      <button class="chip" data-v="early">Early swim</button>
+    </div>
+  </div>
+  <div class="crow">
+    <span class="lbl">Open now</span>
+    <div class="chips" id="fOpen"><button class="chip" data-v="1">Only open right now</button></div>
+    <span class="lbl">Max travel</span>
+    <input type="range" id="fTime" min="10" max="75" step="5" value="75">
+    <span id="fTimeV" style="font-size:12.5px;color:var(--accent2);font-weight:600;min-width:52px">any</span>
+    <span class="lbl">Sort</span>
+    <select id="sort">
+      <option value="time">Travel time</option>
+      <option value="busy">Least busy first</option>
+      <option value="name">Name</option>
+      <option value="price">Price</option>
+    </select>
+    <span class="count" id="count"></span>
+  </div>
+</div>
+
+<div id="notice"></div>
+<div id="pass"></div>
+<div id="banner"></div>
+
+<div class="legend">
+  <span><i style="background:var(--ok)"></i>Noch Platz — space available</span>
+  <span><i style="background:var(--warn)"></i>Gut besucht — busy</span>
+  <span><i style="background:var(--bad)"></i>Voll / kein Einlass — full</span>
+  <span><i style="background:var(--off)"></i>No live data for this pool</span>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<footer>
+  <div><b style="color:var(--dim)">Live occupancy</b> comes from the City of Vienna Bäderampel open-data layer (<code>SCHWIMMBADOGD</code>), the exact same feed wien.gv.at uses. It refreshes through the day and also carries a 3-day outlook. Pools run by other operators (Stadthallenbad, Stadionbad, Therme Wien, Badeschiff) are in the feed but the city does not publish occupancy for them — those show grey.</div>
+  <div style="margin-top:8px"><b style="color:var(--dim)">Hours &amp; prices</b> were checked against official sources on 29 July 2026 and reflect the late-July/August 2026 schedule. Vienna's pools change hours constantly for maintenance, swim courses and heatwaves — the "official page" link on each card is always the truth. Outdoor pools can close from 15:00 in bad weather (Gänsehäufel from 17:00).</div>
+  <div style="margin-top:8px">Sources: <a href="https://www.wien.gv.at/spezial/baederampel/">Bäderampel</a> · <a href="https://www.wien.gv.at/freizeit/baeder">Wiener Bäder</a> · <a href="https://www.wien.gv.at/freizeit/baeder-eintrittspreise">Eintrittspreise</a> · <a href="https://www.wienersportstaetten.at/">Wiener Sportstätten</a> · <a href="https://thermewien.at/">Therme Wien</a> · <a href="https://www.badeschiff.at/">Badeschiff</a></div>
+</footer>
+</div>
+
+<script>
+const HOME = {q:"Karlsplatz,+1010+Wien"};   // routing origin only — no home coordinates in this build
+
+/* Wiener Bäder 6-Monatskarte, bought 29 July 2026 */
+const PASS = {
+  name:"Wiener Bäder 6-Monatskarte",
+  cost:170.10,          // adult, 2026
+  dayTicket:8.10,       // what one visit would otherwise cost
+  from:"2026-07-29",
+  to:"2027-01-28"
+};
+PASS.breakEven = Math.ceil(PASS.cost / PASS.dayTicket);   // 21 visits
+
+/* Visit log. Browser storage is used when the page is hosted; when it isn't
+   available (sandboxed preview) the log simply lives for the session. */
+const STORE = "swimwien.visits.v1";
+let VISITS = [];
+function loadVisits(){
+  try{ VISITS = JSON.parse(localStorage.getItem(STORE) || "[]"); }
+  catch(e){ VISITS = []; }
+}
+function saveVisits(){
+  try{ localStorage.setItem(STORE, JSON.stringify(VISITS)); }catch(e){}
+}
+function logVisit(id){
+  VISITS.push({id:id, d:iso(new Date())});
+  saveVisits(); render();
+}
+function undoVisit(){
+  VISITS.pop(); saveVisits(); render();
+}
+function storageWorks(){
+  try{ localStorage.setItem("__t","1"); localStorage.removeItem("__t"); return true; }
+  catch(e){ return false; }
+}
+
+/* hours: 0=Sun … 6=Sat, array of ["HH:MM","HH:MM"] windows. [] = closed that day */
+const POOLS = [
+/* ---------- CITY INDOOR / KOMBI ---------- */
+{
+ id:"theresienbad", wfs:"Theresienbad", name:"Theresienbad", kind:"indoor",
+ addr:"Hufelandgasse 3, 1120 Wien", lat:48.18184, lon:16.32805,
+ min:25, transfers:0, route:"<b>U4</b> Karlsplatz → Meidling Hauptstraße, 5 min walk", stop:"Meidling Hauptstraße (U4)",
+ price:8.10, covered:true, lap:true, sauna:true, early:true,
+ tags:["Kombibad","Hall + outdoor","Sportbecken","Frühschwimmen"],
+ hours:{1:[["11:00","19:30"]],2:[["06:45","07:50"],["08:00","19:30"]],3:[["06:45","07:50"],["08:00","19:30"]],4:[["06:45","07:50"],["08:00","19:30"]],5:[["08:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","17:30"]]},
+ hoursTxt:"Mon 11:00–19:30 · Tue–Thu 06:45–07:50 + 08:00–19:30 · Fri/Sat 08:00–19:30 · Sun 08:00–17:30",
+ note:"Hall, sauna and Brausebad close 31 Aug – 20 Sep for maintenance.",
+ url:"https://www.wien.gv.at/freizeit/theresienbad"
+},
+{
+ id:"amalienbad", wfs:"Amalienbad", name:"Amalienbad", kind:"indoor",
+ addr:"Reumannplatz 23, 1100 Wien", lat:48.17428, lon:16.37897,
+ min:20, transfers:0, route:"<b>U1</b> Karlsplatz → Reumannplatz, 2 min walk", stop:"Reumannplatz (U1)",
+ price:8.10, covered:true, lap:true, sauna:true, saunaClosed:{from:"2026-07-06", to:"2026-08-09"}, early:true,
+ tags:["Hallenbad","Art-deco landmark","Sportbecken","Frühschwimmen","Sunday training hall"],
+ hours:{1:[],2:[["06:45","07:50"],["13:00","16:30"]],3:[["06:45","07:50"],["13:00","21:00"]],4:[["08:00","21:00"]],5:[["06:45","07:50"],["13:00","16:30"]],6:[["08:00","18:30"]],0:[["08:00","17:30"]]},
+ hoursTxt:"Mon closed · Tue/Fri 06:45–07:50 + 13:00–16:30 · Wed 06:45–07:50 + 13:00–21:00 · Thu 08:00–21:00 · Sat 08:00–18:30 · Sun 08:00–17:30",
+ closed:{from:"2026-07-06", to:"2026-08-02", why:"Annual maintenance — reopens 3 August. Sauna stays shut until 9 August."},
+ note:"Closed 15 August.",
+ url:"https://www.wien.gv.at/freizeit/amalienbad"
+},
+{
+ id:"floridsdorfer", wfs:"Hallenbad Floridsdorf", name:"Floridsdorfer Bad", kind:"indoor",
+ addr:"Franklinstraße 22, 1210 Wien", lat:48.25433, lon:16.40228,
+ min:40, transfers:1, route:"<b>U4</b> → Spittelau, <b>U6</b> → Floridsdorf, 5 min walk", stop:"Floridsdorf (U6, S-Bahn)",
+ price:8.10, covered:true, lap:false, sauna:true, early:true,
+ tags:["Hallenbad","Summer lawn","Frühschwimmen"],
+ hours:{1:[],2:[["06:45","07:50"],["08:00","16:30"]],3:[["06:45","07:50"],["08:00","21:00"]],4:[["08:00","21:00"]],5:[["06:45","07:50"],["08:00","16:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Mon closed · Tue/Fri 06:45–07:50 + 08:00–16:30 · Wed 06:45–07:50 + 08:00–21:00 · Thu 08:00–21:00 · Sat/Sun 08:00–19:30",
+ note:"Closes 17 Aug – 7 Sep for maintenance.",
+ url:"https://www.wien.gv.at/freizeit/floridsdorfer-bad"
+},
+{
+ id:"huetteldorf", wfs:"Hallenbad Hütteldorf", name:"Hütteldorfer Bad", kind:"indoor",
+ addr:"Linzer Straße 376, 1140 Wien", lat:48.20284, lon:16.26429,
+ min:40, transfers:0, route:"<b>U4</b> Karlsplatz → Hütteldorf, 10 min walk (or tram 49 to Rettichgasse)", stop:"Hütteldorf (U4) / Rettichgasse (49)",
+ price:8.10, covered:true, lap:false, sauna:true, saunaClosed:{from:"2026-08-03", to:"2026-08-09"}, early:true,
+ tags:["Hallenbad","Erlebnisbecken","Whirlpool","Outdoor section","Frühschwimmen"],
+ hours:{1:[["06:45","07:50"],["08:00","21:00"]],2:[["06:45","07:50"],["08:00","21:00"]],3:[["11:00","21:00"]],4:[["06:45","07:50"],["08:00","21:00"]],5:[["06:45","07:50"],["08:00","21:00"]],6:[["08:00","21:00"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Mon/Tue/Thu/Fri 06:45–07:50 + 08:00–21:00 · Wed 11:00–21:00 · Sat 08:00–21:00 · Sun 08:00–19:30",
+ note:"Leisure pool — no proper lap lanes. Slide out of order. Sauna shut 3–9 Aug; whole bath 7–27 Sep.",
+ url:"https://www.wien.gv.at/freizeit/huetteldorfer-bad"
+},
+{
+ id:"brigittenau", wfs:"Kombibad Brigittenau", name:"Brigittenauer Bad", kind:"indoor",
+ addr:"Klosterneuburger Straße 93–97, 1200 Wien", lat:48.23556, lon:16.36496,
+ min:30, transfers:1, route:"<b>U4</b> → Schottenring, <b>tram 31</b> → Wexstraße, 2 min walk", stop:"Wexstraße (31/33)",
+ price:8.10, covered:true, lap:false, sauna:true, saunaClosed:{from:"2026-08-03", to:"2026-08-09"}, early:true,
+ tags:["Kombibad","New outdoor pool 2026","Warm massage pool","Frühschwimmen"],
+ hours:{1:[["06:45","07:50"],["08:00","19:30"]],2:[["11:00","19:30"]],3:[["06:45","07:50"],["08:00","19:30"]],4:[["08:00","19:30"]],5:[["06:45","07:50"],["08:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Mon/Wed/Fri 06:45–07:50 + 08:00–19:30 · Tue 11:00–19:30 · Thu 08:00–19:30 · Sat/Sun 08:00–19:30",
+ note:"Sauna shut 3–9 Aug. Outdoor pool open to 20:00 during the heat spell (to 9 Aug).",
+ url:"https://www.wien.gv.at/freizeit/brigittenauer-bad"
+},
+{
+ id:"donaustadt", wfs:"Kombibad Donaustadt", name:"Donaustädter Bad", kind:"indoor",
+ addr:"Portnergasse 38, 1220 Wien", lat:48.24279, lon:16.44301,
+ min:35, transfers:1, route:"<b>U1</b> → Kagran, <b>bus 94A</b> → Portnergasse, 4 min walk", stop:"Portnergasse (94A/95A)",
+ price:8.10, covered:true, lap:false, sauna:true, saunaClosed:{from:"2026-06-15", to:"2026-09-27"}, early:true,
+ tags:["Kombibad","Warm massage pool","Slide","Frühschwimmen"],
+ hours:{1:[["09:00","19:30"]],2:[["06:45","07:50"],["09:00","19:30"]],3:[["11:00","19:30"]],4:[["06:45","07:50"],["09:00","16:30"]],5:[["06:45","07:50"],["09:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Aug 1–23: Mon 09:00–19:30 · Tue/Fri 06:45–07:50 + 09:00–19:30 · Wed 11:00–19:30 · Thu 06:45–07:50 + 09:00–16:30 · Sat/Sun 08:00–19:30",
+ note:"Until 6 Sep the hall is only reachable through the outdoor pool, and changing rooms are outdoor-only. Sauna shut until 27 Sep. Reduced hours until 31 July (Frühschwimmen only on weekdays).",
+ url:"https://www.wien.gv.at/freizeit/donaustaedter-bad"
+},
+{
+ id:"grossfeld", wfs:"Kombibad Großfeldsiedlung", name:"Großfeldsiedlungsbad", kind:"indoor",
+ addr:"Oswald-Redlich-Straße 44, 1210 Wien", lat:48.27407, lon:16.44854,
+ min:35, transfers:0, route:"<b>U1</b> Karlsplatz → Großfeldsiedlung, 8 min walk", stop:"Großfeldsiedlung (U1)",
+ price:8.10, covered:true, lap:true, sauna:true, saunaClosed:{from:"2026-06-15", to:"2026-09-13"}, early:true,
+ tags:["Kombibad","Outdoor Schwimmerbecken","Training hall","Frühschwimmen"],
+ hours:{1:[["09:00","19:30"]],2:[["09:00","19:30"]],3:[["09:00","19:30"]],4:[["09:00","19:30"]],5:[["09:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Outdoor pool: Mon–Fri 09:00–19:30 · Sat/Sun 08:00–19:30",
+ note:"Indoor hall closed for maintenance 20 July – 9 Aug; from 10 Aug the hall runs Frühschwimmen only on weekdays. Sauna shut until 13 Sep. Hours above are the outdoor pool.",
+ url:"https://www.wien.gv.at/freizeit/grossfeldsiedlungsbad"
+},
+{
+ id:"simmering", wfs:"Kombibad Simmering", name:"Simmeringer Bad", kind:"indoor",
+ addr:"Florian-Hedorfer-Straße 5, 1110 Wien", lat:48.16350, lon:16.42955,
+ min:40, transfers:0, route:"5 min walk to Schwarzenbergplatz, <b>tram 71</b> → Weißenböckstraße, 3 min walk", stop:"Weißenböckstraße (71/11)",
+ price:8.10, covered:true, lap:false, sauna:true, saunaClosed:{from:"2026-06-15", to:"2026-09-13"}, early:true,
+ tags:["Kombibad","Wave pool","Slide","Frühschwimmen"],
+ hours:{1:[["09:00","19:30"]],2:[["09:00","19:30"]],3:[["09:00","19:30"]],4:[["09:00","19:30"]],5:[["09:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Outdoor pool: Mon–Fri 09:00–19:30 · Sat/Sun 08:00–19:30",
+ note:"Indoor hall runs a patchy summer schedule (1–9 Aug fuller, otherwise Frühschwimmen only on weekdays) and closes entirely 24 Aug – 13 Sep. Sauna shut until 13 Sep. Hours above are the outdoor pool.",
+ url:"https://www.wien.gv.at/freizeit/simmeringer-bad"
+},
+{
+ id:"ottakring", wfs:"Ottakringerbad", name:"Ottakringer Bad", kind:"indoor",
+ addr:"Johann-Staud-Straße 11, 1160 Wien", lat:48.21215, lon:16.29167,
+ min:45, transfers:1, route:"<b>U3</b> → Ottakring, <b>bus 46B/146B</b> → Ottakringer Bad", stop:"Ottakringer Bad (46B/146B/51A)",
+ price:8.10, covered:true, lap:false, sauna:true, saunaClosed:{from:"2026-05-01", to:"2026-09-13"}, early:true,
+ tags:["Kombibad","Erlebnisbecken","Slide","Frühschwimmen"],
+ hours:{1:[["09:00","19:30"]],2:[["09:00","19:30"]],3:[["09:00","19:30"]],4:[["09:00","19:30"]],5:[["09:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Outdoor pool: Mon–Fri 09:00–19:30 · Sat/Sun 08:00–19:30",
+ note:"Indoor hall shut for maintenance 6 July – 9 Aug; sauna shut the entire summer season. Hall only reachable through the outdoor pool until 13 Sep.",
+ url:"https://www.wien.gv.at/freizeit/ottakringer-bad"
+},
+{
+ id:"doebling", wfs:"Kombibad Döbling", name:"Döblinger Bad", kind:"outdoor",
+ addr:"Geweygasse 6–10, 1190 Wien", lat:48.25085, lon:16.35805,
+ min:40, transfers:0, route:"<b>U4</b> Karlsplatz → Heiligenstadt, then bus 38A/39A or 15 min walk", stop:"Heiligenstadt (U4)",
+ price:8.10, covered:true, lap:true, sauna:false,
+ tags:["Outdoor Schwimmerbecken","Erlebnisbecken","Slide","Whirl pool"],
+ hours:{1:[["09:00","19:30"]],2:[["09:00","19:30"]],3:[["09:00","19:30"]],4:[["09:00","19:30"]],5:[["09:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Mon–Fri 09:00–19:30 · Sat/Sun/holidays 08:00–19:30 (to 18:30 from 1 Sep)",
+ note:"Indoor hall and sauna closed for renovation until autumn 2026. Not step-free this season; car park closed.",
+ url:"https://www.wien.gv.at/freizeit/doeblinger-bad"
+},
+{
+ id:"hietzing", wfs:"Hietzinger Bad", name:"Hietzinger Bad", kind:"outdoor",
+ addr:"Atzgersdorfer Straße 14, 1130 Wien", lat:48.16892, lon:16.29454,
+ min:45, transfers:1, route:"<b>U4</b> → Hietzing, <b>bus 58A/58B</b> → Atzgersdorfer Straße, 4 min walk", stop:"Atzgersdorfer Straße (58A/58B)",
+ price:8.10, covered:true, lap:true, sauna:false,
+ tags:["Outdoor Schwimmerbecken","Mehrzweckbecken"],
+ hours:{1:[["09:00","19:30"]],2:[["09:00","19:30"]],3:[["09:00","19:30"]],4:[["09:00","19:30"]],5:[["09:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Mon–Fri 09:00–19:30 · Sat/Sun/holidays 08:00–19:30",
+ note:"Indoor hall and sauna closed for renovation until autumn 2027 — outdoor pool only.",
+ url:"https://www.wien.gv.at/freizeit/hietzinger-bad"
+},
+{
+ id:"joerger", wfs:"Kombibad Jörgerbad", name:"Jörgerbad", kind:"indoor",
+ addr:"Jörgerstraße 42–44, 1170 Wien", lat:48.21812, lon:16.33501,
+ min:35, transfers:1, route:"<b>U2</b> → Schottentor, <b>tram 43</b> → Palffygasse, 4 min walk", stop:"Palffygasse (43)",
+ price:8.10, covered:true, lap:false, sauna:true,
+ tags:["Vienna's oldest indoor pool (1914)"],
+ hours:{1:[],2:[],3:[],4:[],5:[],6:[],0:[]},
+ hoursTxt:"Closed",
+ closed:{from:"2026-01-01", to:"2027-12-31", why:"Fully closed for renovation until 2027 — hall, sauna and outdoor pool."},
+ url:"https://www.wien.gv.at/freizeit/joergerbad"
+},
+
+/* ---------- CITY OUTDOOR ---------- */
+{
+ id:"laaerberg", wfs:"Laaerbergbad", name:"Laaerbergbad", kind:"outdoor",
+ addr:"Ludwig-von-Höhnel-Gasse 2, 1100 Wien", lat:48.15935, lon:16.38473,
+ min:25, transfers:0, route:"<b>U1</b> Karlsplatz → Altes Landgut, 6 min walk (or bus 68A one stop)", stop:"Altes Landgut (U1)",
+ price:8.10, covered:true, lap:true, sauna:false,
+ tags:["Sportbecken","Wave pool","Dive tower","Big lawn"],
+ hours:{1:[["09:00","20:00"]],2:[["09:00","20:00"]],3:[["09:00","20:00"]],4:[["09:00","20:00"]],5:[["09:00","20:00"]],6:[["08:00","20:00"]],0:[["08:00","20:00"]]},
+ hoursTxt:"Mon–Fri 09:00–19:30 · Sat/Sun/holidays 08:00–19:30 — extended to 20:00 during the heat spell (to 9 Aug)",
+ note:"Best value combo near you: 25 min door-to-door, sport pool plus a wave pool. €4.90 after 16:00.",
+ url:"https://www.wien.gv.at/freizeit/laaerbergbad"
+},
+{
+ id:"kongress", wfs:"Kongreßbad", name:"Kongreßbad", kind:"outdoor",
+ addr:"Julius-Meinl-Gasse 7a, 1160 Wien", lat:48.22160, lon:16.31235,
+ min:45, transfers:0, route:"<b>Tram 2</b> from Oper → Liebknechtgasse, 10 min walk (or bus 46B to Kongreßbad)", stop:"Kongreßbad (46B) / Liebknechtgasse (2)",
+ price:8.10, covered:true, lap:true, sauna:false,
+ tags:["Sportbecken","Erlebnisbecken","Current channel","1928 architecture"],
+ hours:{1:[["09:00","20:00"]],2:[["09:00","20:00"]],3:[["09:00","20:00"]],4:[["09:00","20:00"]],5:[["09:00","20:00"]],6:[["08:00","20:00"]],0:[["08:00","20:00"]]},
+ hoursTxt:"Mon–Fri 09:00–19:30 · Sat/Sun/holidays 08:00–19:30 — extended to 20:00 during the heat spell (to 9 Aug)",
+ url:"https://www.wien.gv.at/freizeit/kongressbad"
+},
+{
+ id:"schafberg", wfs:"Schafbergbad", name:"Schafbergbad", kind:"outdoor",
+ addr:"Josef-Redl-Gasse 2, 1180 Wien", lat:48.23748, lon:16.30104,
+ min:50, transfers:2, route:"<b>Tram 2</b> → J.-N.-Berger-Platz, <b>tram 9</b> → Simonygasse, <b>bus 42A</b> → Schafbergbad", stop:"Schafbergbad (42A)",
+ price:8.10, covered:true, lap:true, sauna:false,
+ tags:["50 m Sportbecken","Hillside","Dive tower","Slide"],
+ hours:{1:[["09:00","19:30"]],2:[["09:00","19:30"]],3:[["09:00","19:30"]],4:[["09:00","19:30"]],5:[["09:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Mon–Fri 09:00–19:30 · Sat/Sun/holidays 08:00–19:30",
+ note:"The only confirmed 50 m outdoor sport pool in the city network — worth the awkward journey if you want real distance.",
+ url:"https://www.wien.gv.at/freizeit/schafbergbad"
+},
+{
+ id:"hoepfler", wfs:"Höpflerbad", name:"Höpflerbad", kind:"outdoor",
+ addr:"Endresstraße 24–26, 1230 Wien", lat:48.14753, lon:16.28589,
+ min:40, transfers:1, route:"<b>U1</b> → Wien Hbf, <b>S2/S3</b> → Atzgersdorf, 6 min walk", stop:"Wien Atzgersdorf (S-Bahn) / Endresstraße (60)",
+ price:8.10, covered:true, lap:true, sauna:false,
+ tags:["Schwimmerbecken","Slide","Quiet"],
+ hours:{1:[["09:00","19:30"]],2:[["09:00","19:30"]],3:[["09:00","19:30"]],4:[["09:00","19:30"]],5:[["09:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Mon–Fri 09:00–19:30 · Sat/Sun/holidays 08:00–19:30",
+ url:"https://www.wien.gv.at/freizeit/hoepflerbad"
+},
+{
+ id:"krapfenwaldl", wfs:"Krapfenwaldl Bad", name:"Krapfenwaldlbad", kind:"outdoor",
+ addr:"Krapfenwaldgasse 65–73, 1190 Wien", lat:48.26690, lon:16.33102,
+ min:50, transfers:1, route:"<b>U4</b> → Heiligenstadt, <b>bus 38A</b> → Wagenwiese, 8 min uphill walk", stop:"Wagenwiese (38A)",
+ price:8.10, covered:true, lap:false, sauna:false,
+ tags:["City view","Woodland setting","Massage jets","Sunbathing"],
+ hours:{1:[["09:00","19:30"]],2:[["09:00","19:30"]],3:[["09:00","19:30"]],4:[["09:00","19:30"]],5:[["09:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Mon–Fri 09:00–19:30 · Sat/Sun/holidays 08:00–19:30",
+ note:"The most scenic pool in Vienna — hillside, views over the city. No lap lanes, and it gets rammed on hot weekends.",
+ url:"https://www.wien.gv.at/freizeit/krapfenwaldlbad"
+},
+{
+ id:"liesing", wfs:"Liesinger Bad", name:"Liesinger Bad", kind:"outdoor",
+ addr:"Perchtoldsdorfer Straße 14–16, 1230 Wien", lat:48.13267, lon:16.28112,
+ min:40, transfers:1, route:"<b>U1</b> → Wien Hbf, <b>S2/CJX</b> → Liesing, 7 min walk", stop:"Wien Liesing (S-Bahn) / Liesing Bad (207/259)",
+ price:8.10, covered:true, lap:false, sauna:false,
+ tags:["Small neighbourhood pool","Slide","Rarely crowded"],
+ hours:{1:[["09:00","19:30"]],2:[["09:00","19:30"]],3:[["09:00","19:30"]],4:[["09:00","19:30"]],5:[["09:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Mon–Fri 09:00–19:30 · Sat/Sun/holidays 08:00–19:30",
+ url:"https://www.wien.gv.at/freizeit/liesingerbad"
+},
+{
+ id:"hadersdorf", wfs:"Sommerbad Hadersdorf-Weidlingau", name:"Hadersdorf-Weidlingauer Bad", kind:"outdoor",
+ addr:"Hauptstraße 41, 1140 Wien", lat:48.20903, lon:16.22327,
+ min:45, transfers:1, route:"<b>U4</b> → Hütteldorf, <b>S50</b> → Hadersdorf, 5 min walk", stop:"Wien Hadersdorf (S50)",
+ price:8.10, covered:true, lap:false, sauna:false,
+ tags:["Smallest city pool","Green edge of the Wienerwald","Very quiet"],
+ hours:{1:[["09:00","19:30"]],2:[["09:00","19:30"]],3:[["09:00","19:30"]],4:[["09:00","19:30"]],5:[["09:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Mon–Fri 09:00–19:30 · Sat/Sun/holidays 08:00–19:30",
+ url:"https://www.wien.gv.at/freizeit/hadersdorf-weidlingauer-bad"
+},
+
+/* ---------- STRANDBÄDER ---------- */
+{
+ id:"gaensehaeufel", wfs:"Strandbad Gänsehäufel", name:"Strandbad Gänsehäufel", kind:"open-water",
+ addr:"Moissigasse 21, 1220 Wien", lat:48.22784, lon:16.42739,
+ min:40, transfers:1, route:"<b>U1</b> → Kaisermühlen VIC, <b>bus 92A</b> → Schüttauplatz, 8 min walk", stop:"Schüttauplatz (90A/91A/92A)",
+ price:8.10, covered:true, lap:false, sauna:false,
+ tags:["Island beach bath","Wave pool","Alte Donau swimming","FKK area","Biggest lawn in Vienna"],
+ hours:{1:[["09:00","19:30"]],2:[["09:00","19:30"]],3:[["09:00","19:30"]],4:[["09:00","19:30"]],5:[["09:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Mon–Fri 09:00–19:30 · Sat/Sun/holidays 08:00–19:30",
+ note:"The classic Vienna summer day out. Only closes early from 17:00 in bad weather (other pools go at 15:00).",
+ url:"https://www.wien.gv.at/freizeit/strandbad-gaensehaeufel"
+},
+{
+ id:"strandbad-ad", wfs:"Strandbad Alte Donau", name:"Strandbad Alte Donau", kind:"open-water",
+ addr:"Arbeiterstrandbadstraße 91, 1220 Wien", lat:48.24219, lon:16.41682,
+ min:35, transfers:0, route:"<b>U1</b> Karlsplatz → Alte Donau, 12 min walk (or bus 20B)", stop:"Alte Donau (U1)",
+ price:8.10, covered:true, lap:true, sauna:false,
+ tags:["Open-water swimming","New jetty","Latest closing time in the city"],
+ hours:{1:[["09:00","20:00"]],2:[["09:00","20:00"]],3:[["09:00","20:00"]],4:[["09:00","20:00"]],5:[["09:00","20:00"]],6:[["08:00","20:00"]],0:[["08:00","20:00"]]},
+ hoursTxt:"To 2 Aug: Mon–Fri 09:00–20:30, Sat/Sun 08:00–20:30 · 3–9 Aug to 20:00 · then 19:30",
+ note:"The only city bath running a late-evening trial this season — the best after-work swim if you want water past 19:30.",
+ url:"https://www.wien.gv.at/freizeit/strandbad-alte-donau"
+},
+{
+ id:"angelibad", wfs:"Strandbad Angelibad", name:"Strandbad Angelibad", kind:"open-water",
+ addr:"An der oberen Alten Donau, 1210 Wien", lat:48.24877, lon:16.40335,
+ min:35, transfers:1, route:"<b>U1</b> → Alte Donau, <b>bus 20B</b> → Angelibad", stop:"Angelibad (20B)",
+ price:8.10, covered:true, lap:true, sauna:false,
+ tags:["Open-water only","Swim jetty","Step-free water access","Small & calm"],
+ hours:{1:[["09:00","19:30"]],2:[["09:00","19:30"]],3:[["09:00","19:30"]],4:[["09:00","19:30"]],5:[["09:00","19:30"]],6:[["08:00","19:30"]],0:[["08:00","19:30"]]},
+ hoursTxt:"Mon–Fri 09:00–19:30 · Sat/Sun/holidays 08:00–19:30",
+ note:"No tiled pool at all — you swim from a floating jetty into the Alte Donau. Great for open-water laps in a supervised setting.",
+ url:"https://www.wien.gv.at/freizeit/angelibad"
+},
+
+/* ---------- FREE OPEN WATER ---------- */
+{
+ id:"donauinsel", name:"Donauinsel / Neue Donau", kind:"open-water",
+ addr:"U1 Donauinsel, 1220 Wien", lat:48.22960, lon:16.40540,
+ min:20, transfers:0, route:"<b>U1</b> Karlsplatz → Donauinsel, lift straight down to the water", stop:"Donauinsel (U1)",
+ price:0, lap:true, sauna:false,
+ tags:["Free","Open 24 h","Open-water training","~50 floating platforms","Bank stairs"],
+ hours:{1:[["00:00","23:59"]],2:[["00:00","23:59"]],3:[["00:00","23:59"]],4:[["00:00","23:59"]],5:[["00:00","23:59"]],6:[["00:00","23:59"]],0:[["00:00","23:59"]]},
+ hoursTxt:"Always open",
+ note:"Where Vienna's triathletes train. Free, unsupervised, no lifeguards — measure laps between the platforms.",
+ url:"https://www.wien.gv.at/freizeit/baden-donauinsel-neue-donau"
+},
+{
+ id:"altedonau-free", name:"Alte Donau — free shores", kind:"open-water",
+ addr:"U1 Alte Donau, 1220 Wien", lat:48.24090, lon:16.42600,
+ min:20, transfers:0, route:"<b>U1</b> Karlsplatz → Alte Donau, 3–5 min walk to the free shore areas", stop:"Alte Donau (U1)",
+ price:0, lap:true, sauna:false,
+ tags:["Free","Open 24 h","Calm backwater","7 free bathing areas"],
+ hours:{1:[["00:00","23:59"]],2:[["00:00","23:59"]],3:[["00:00","23:59"]],4:[["00:00","23:59"]],5:[["00:00","23:59"]],6:[["00:00","23:59"]],0:[["00:00","23:59"]]},
+ hoursTxt:"Always open",
+ note:"Warmer and calmer than the Neue Donau. Free spots: Romaplatz, Promenade Obere/Untere Alte Donau, Rehlacke, Kaiserwasser, ArbeiterInnenstrand, Strombucht. No lifeguards.",
+ url:"https://www.wien.gv.at/freizeit/baden-alte-donau"
+},
+
+/* ---------- OTHER OPERATORS ---------- */
+{
+ id:"stadthallenbad", wfs:"Stadthallenbad", name:"Stadthallenbad", kind:"indoor",
+ addr:"Hütteldorfer Straße 2h, 1150 Wien", lat:48.20230, lon:16.33270,
+ min:30, transfers:1, route:"<b>U4</b> → Längenfeldgasse, <b>U6</b> → Burggasse-Stadthalle, 3 min walk", stop:"Burggasse-Stadthalle (U6)",
+ price:9.00, lap:true, sauna:true, early:true,
+ tags:["50 m × 25 m, 8 lanes","Serious training venue","Sauna (gendered days)","Wiener Sportstätten"],
+ hours:{1:[["08:00","21:30"]],2:[["06:30","21:30"]],3:[["08:00","17:30"]],4:[["06:30","21:30"]],5:[["08:00","21:30"]],6:[["07:00","21:30"]],0:[["07:00","18:00"]]},
+ hoursTxt:"Mon 08:00–21:30 · Tue/Thu 06:30–21:30 · Wed 08:00–17:30 · Fri 08:00–21:30 · Sat 07:00–21:30 · Sun 07:00–18:00",
+ closed:{from:"2026-07-18", to:"2026-08-16", why:"Annual maintenance — reopens 17 August. Season-pass holders are pointed at Stadionbad."},
+ note:"The best indoor lap pool in Vienna full stop. Not run by Wiener Bäder, so no live occupancy in the Bäderampel and separate tickets.",
+ url:"https://www.wienersportstaetten.at/de/home/stadthallenbad"
+},
+{
+ id:"stadionbad", wfs:"Stadionbad", name:"Stadionbad im Prater", kind:"outdoor",
+ addr:"Meiereistraße, Prater, 1020 Wien", lat:48.20371, lon:16.42221,
+ min:35, transfers:0, route:"<b>U2</b> Karlsplatz → Stadion, 9 min walk (or bus 77A to Stadionbad)", stop:"Stadion (U2) / Stadionbad (77A)",
+ price:8.00, lap:true, sauna:false,
+ tags:["New 50 m outdoor pool","Prater greenery","Wiener Sportstätten"],
+ hours:{1:[["09:00","19:30"]],2:[["09:00","19:30"]],3:[["09:00","19:30"]],4:[["09:00","19:30"]],5:[["09:00","19:30"]],6:[["09:00","19:30"]],0:[["09:00","19:30"]]},
+ hoursTxt:"Summer season — hours vary by month, check the operator page before going",
+ note:"Hours are my best estimate; Wiener Sportstätten does not publish a stable summer table. The 50 m pool is confirmed.",
+ url:"https://www.wienersportstaetten.at/de/home/stadionbad"
+},
+{
+ id:"therme", wfs:"Therme Wien", name:"Therme Wien Oberlaa", kind:"spa",
+ addr:"Kurbadstraße 14, 1100 Wien", lat:48.14470, lon:16.39600,
+ min:30, transfers:0, route:"<b>U1</b> Karlsplatz → Oberlaa, 6 min walk", stop:"Oberlaa (U1)",
+ price:33.00, lap:true, sauna:true,
+ tags:["25 m Sportbecken","~26 pools","Thermal water 34–36 °C","Big sauna world (+€14)"],
+ hours:{1:[["09:00","22:00"]],2:[["09:00","22:00"]],3:[["09:00","22:00"]],4:[["09:00","22:00"]],5:[["09:00","22:00"]],6:[["09:00","22:00"]],0:[["09:00","22:00"]]},
+ hoursTxt:"Daily 09:00–22:00 (last swim 21:40)",
+ note:"€33 day ticket with locker, €47 including the sauna world. Open every day of the year — your fallback when the city pools are all shut for maintenance.",
+ url:"https://thermewien.at/"
+},
+{
+ id:"badeschiff", wfs:"Badeschiff Wien", name:"Badeschiff", kind:"outdoor",
+ addr:"Donaukanal at Urania, 1010 Wien", lat:48.21170, lon:16.38440,
+ min:20, transfers:0, route:"<b>U1/U4</b> → Schwedenplatz, 7 min walk along the canal", stop:"Schwedenplatz (U1/U4) / Julius-Raab-Platz (1/2)",
+ price:10.50, lap:true, sauna:true,
+ tags:["27 m floating pool","Unheated","Bar & deck","Pool sauna 18:00–21:30"],
+ hours:{1:[["11:00","22:00"]],2:[["11:00","22:00"]],3:[["11:00","22:00"]],4:[["11:00","22:00"]],5:[["11:00","22:00"]],6:[["11:00","22:00"]],0:[["11:00","22:00"]]},
+ hoursTxt:"Pool daily 11:00–22:00 (venue to 01:00) · season-pass holders from 08:00",
+ note:"€10.50 day / €8 evening from 18:00, sauna included. Unsupervised. The closest real swim to your flat and the only one open late.",
+ url:"https://www.badeschiff.at/pool/"
+},
+{
+ id:"johnharris", name:"John Harris Margaretenplatz", kind:"spa",
+ addr:"Strobachgasse 7–9, 1050 Wien", lat:48.19300, lon:16.35970,
+ min:20, transfers:0, route:"<b>Bus 59A</b> from Opernring → Ziegelofengasse, 5 min walk (or U4 Pilgramgasse)", stop:"Ziegelofengasse (59A) / Pilgramgasse (U4)",
+ price:null, lap:true, sauna:true, early:true,
+ tags:["25 m Sportpool 26.5 °C","Finnish + bio sauna","Steam bath","Opens 06:30"],
+ hours:{1:[["06:30","23:00"]],2:[["06:30","23:00"]],3:[["06:30","23:00"]],4:[["06:30","23:00"]],5:[["06:30","23:00"]],6:[["09:00","21:00"]],0:[["09:00","21:00"]]},
+ hoursTxt:"Mon–Fri 06:30–23:00 · Sat/Sun/holidays 09:00–21:00",
+ note:"The only genuine 25 m lap pool in a Vienna commercial gym. Day-pass price is not published — call +43 1 544 12 12. Membership runs ~€149/month.",
+ url:"https://www.johnharris.at/de/studios/detail/2/margaretenplatz.html"
+},
+{
+ id:"holmes-mill", name:"Holmes Place Millennium", kind:"spa",
+ addr:"Wehlistraße 66, 1200 Wien", lat:48.24130, lon:16.38660,
+ min:30, transfers:1, route:"<b>U4</b> → Spittelau, <b>U6</b> → Handelskai, 3 min walk", stop:"Handelskai (U6, S-Bahn)",
+ price:35.00, lap:true, sauna:true, early:true,
+ tags:["Day pass €35","Sauna + steam","Opens 06:30","Pool length unpublished"],
+ hours:{1:[["06:30","22:00"]],2:[["06:30","22:00"]],3:[["06:30","22:00"]],4:[["06:30","22:00"]],5:[["06:30","22:00"]],6:[["09:00","21:00"]],0:[["09:00","21:00"]]},
+ hoursTxt:"Mon–Fri 06:30–22:00 · Sat/Sun 09:00–21:00",
+ note:"Real walk-in day pass (€35), free trial day also advertised. They don't publish the pool length — worth one call before you commit.",
+ url:"https://www.holmesplace.at/clubs/wien/holmes-place-millennium"
+},
+{
+ id:"sanssouci", name:"Hotel Sans Souci Day Spa", kind:"spa",
+ addr:"Burggasse 2, 1070 Wien", lat:48.20500, lon:16.35600,
+ min:20, transfers:0, route:"<b>U2</b> Karlsplatz → Volkstheater, 3 min walk", stop:"Volkstheater (U2/U3)",
+ price:59.00, lap:true, sauna:true,
+ tags:["20 m pool","Sauna 60 °C + 90 °C","Steam bath","Booking required"],
+ hours:{1:[["10:00","22:00"]],2:[["10:00","22:00"]],3:[["10:00","22:00"]],4:[["10:00","22:00"]],5:[["10:00","22:00"]],6:[["10:00","22:00"]],0:[["10:00","22:00"]]},
+ hoursTxt:"Day-spa guests daily 10:00–22:00 · bookings taken 10:00–20:00",
+ note:"€59 for 4 h Mon–Thu, €75 Fri–Sun. Longest hotel pool in Vienna and the best-value luxury option. External guests are capped — reserve.",
+ url:"https://www.sanssouci-wien.com/en/dayspa.html"
+},
+{
+ id:"ritz", name:"The Ritz-Carlton Spa", kind:"spa",
+ addr:"Schubertring 5–7, 1010 Wien", lat:48.20160, lon:16.37770,
+ min:10, transfers:0, route:"8 min walk via Kärntner Ring, or <b>tram 2/71/D</b> → Schwarzenbergplatz", stop:"Schwarzenbergplatz (2/71/D)",
+ price:75.00, lap:false, sauna:true,
+ tags:["18 m indoor pool","Sauna + steam","Pool open 06:00–24:00","Walking distance"],
+ hours:{1:[["06:00","23:59"]],2:[["06:00","23:59"]],3:[["06:00","23:59"]],4:[["06:00","23:59"]],5:[["06:00","23:59"]],6:[["06:00","23:59"]],0:[["06:00","23:59"]]},
+ hoursTxt:"Pool & fitness daily 06:00–24:00 · spa reception 10:00–20:00",
+ note:"€75 Mon–Thu / €85 Fri–Sun for 4 h. Expensive, but it's a 10-minute walk from your door and open at hours nothing else is.",
+ url:"https://www.ritzcarlton.com/en/hotels/vierz-the-ritz-carlton-vienna/spa/"
+},
+
+/* ---------- OTHER OPERATORS: OUTDOOR & OPEN WATER ---------- */
+{
+ id:"schoenbrunn", wfs:"Schönbrunner Bad", name:"Schönbrunner Bad", kind:"outdoor",
+ addr:"Schlosspark Schönbrunn (above the Obelisk), 1130 Wien", lat:48.17926, lon:16.31512,
+ min:35, transfers:0, route:"<b>U4</b> Karlsplatz → Schönbrunn, then 18 min uphill walk through the Schlosspark", stop:"Schönbrunn (U4) — or U4 Meidling Hauptstraße + bus 8A",
+ price:20.00, lap:true, sauna:true,
+ tags:["50 m Sportbecken, 8 lanes","Heated","Lane roped off for swimmers","25 m second pool","Open till 21:00"],
+ hours:{1:[["08:30","21:00"]],2:[["08:30","21:00"]],3:[["08:30","21:00"]],4:[["08:30","21:00"]],5:[["08:30","21:00"]],6:[["08:30","21:00"]],0:[["08:30","21:00"]]},
+ hoursTxt:"Daily 08:30–21:00 to 15 Aug · 08:30–20:00 from 16 Aug · 08:30–19:00 from 1 Sep. Last entry 1 h before, water cleared 30 min before.",
+ note:"The best outdoor lap swimming in Vienna — a full Olympic 50 m, 8-lane heated pool, with a lane kept roped off for serious swimmers even at peak times. €20 keeps it far quieter than a city Freibad, and the €12 evening ticket from 17:00 is the value play. The uphill walk from the U-Bahn is real.",
+ url:"https://www.schoenbrunnerbad.at/"
+},
+{
+ id:"bundesbad", wfs:"Bundesbad Alte Donau", name:"Bundesbad Alte Donau", kind:"open-water",
+ addr:"Arbeiterstrandbadstraße 93, 1220 Wien", lat:48.24008, lon:16.42131,
+ min:25, transfers:0, route:"<b>U1</b> Karlsplatz → Alte Donau, 6 min walk (bus 20A/20B stops at the gate)", stop:"Alte Donau (U1) / Bundesbad Alte Donau (20A/20B)",
+ price:8.50, lap:true, sauna:false,
+ tags:["Open-water swimming","150 m pebble beach","Two bathing jetties","300+ mature trees","FKK area"],
+ hours:{1:[["09:00","20:00"]],2:[["09:00","20:00"]],3:[["09:00","20:00"]],4:[["09:00","20:00"]],5:[["09:00","20:00"]],6:[["08:00","20:00"]],0:[["08:00","20:00"]]},
+ hoursTxt:"To 15 Aug: Mon–Fri 09:00–20:00, Sat/Sun 08:00–20:00 · from 16 Aug closes 19:30 · season ends 13 Sep",
+ note:"Calmer, greener and more grown-up than the city Strandbad next door, and 10 minutes closer than it. Swim real distance out past the jetties — unlaned natural water, so open-water fitness rather than intervals. €5.50 after 16:00. Add €1 for the locker zone.",
+ url:"https://www.burghauptmannschaft.at/Betriebe/Bundesbad-Alte-Donau.html"
+},
+{
+ id:"stadlau", wfs:"Strandbad Stadlau", name:"Strandbad Stadlau", kind:"open-water",
+ addr:"Am Mühlwasser 6, 1220 Wien", lat:48.21270, lon:16.45838,
+ min:40, transfers:1, route:"<b>U2</b> Karlsplatz → Hardeggasse, <b>bus 92A</b> → Strandbad Stadlau", stop:"Strandbad Stadlau (92A)",
+ price:7.60, lap:false, sauna:false,
+ tags:["Natural backwater lake","Cheapest in the city","Good café","Beach volleyball","Family Naturbad"],
+ hours:{1:[["09:00","20:00"]],2:[["09:00","20:00"]],3:[["09:00","20:00"]],4:[["09:00","20:00"]],5:[["09:00","20:00"]],6:[["09:00","20:00"]],0:[["09:00","20:00"]]},
+ hoursTxt:"Reported daily 09:00–20:00 · season 1 May – 30 Sep — both unconfirmed, ring +43 1 282 32 11",
+ note:"Despite the name it is not on the Alte Donau but on the Mühlwasser, a small separate backwater. No pool at all and shallow edges — fine for cooling off, not for swimming distance. Only some 92A departures serve this branch.",
+ url:"https://www.strand-domizil.at/"
+},
+{
+ id:"neuwaldegg", wfs:"Neuwaldegger Bad", name:"Neuwaldegger Bad", kind:"outdoor",
+ addr:"Promenadegasse 58, 1170 Wien", lat:48.23361, lon:16.28854,
+ min:45, transfers:1, route:"<b>U2</b> → Schottentor, <b>tram 43</b> → Neuwaldegg terminus", stop:"Neuwaldegg (tram 43)",
+ price:null, lap:false, sauna:true,
+ tags:["Wienerwald setting","Wooden cabins","Adults-leaning"],
+ hours:{1:[],2:[],3:[],4:[],5:[],6:[],0:[]},
+ hoursTxt:"Closed",
+ closed:{from:"2025-01-01", to:"2027-04-30", why:"Shut since 2025 — the long-time operator withdrew and the plant needs renovation. Three operators are in negotiation; realistic reopening May 2027. With Jörgerbad also closed, Hernals has no swimming at all."},
+ url:"https://www.facebook.com/neuwaldeggerbad/"
+},
+
+/* ---------- PRIVATE POOLS, SPAS & CLUBS ---------- */
+{
+ id:"johnharris-schiller", name:"John Harris Schillerplatz", kind:"spa",
+ addr:"Nibelungengasse 5, 1010 Wien", lat:48.20130, lon:16.36610,
+ min:5, transfers:0, route:"<b>450 m walk</b> — just behind the Opera, via Operngasse", stop:"Walking distance",
+ price:48.00, lap:false, sauna:true, early:true,
+ tags:["15 m pool 29 °C","Whirlpool 36 °C","Sauna 90 °C + sanarium","Women's sauna","Opens 06:30"],
+ hours:{1:[["06:30","23:00"]],2:[["06:30","23:00"]],3:[["06:30","23:00"]],4:[["06:30","23:00"]],5:[["06:30","23:00"]],6:[["09:00","21:00"]],0:[["09:00","21:00"]]},
+ hoursTxt:"Mon–Fri 06:30–23:00 · Sat/Sun/holidays 09:00–21:00",
+ note:"The closest pool of any kind to your flat — five minutes on foot, right behind the Opera. €48 is a \"from\" price off their booking listing, not published on their own site, so confirm on arrival. 15 m is fine for easy lengths, too short for real sets.",
+ url:"https://www.johnharris.at/de/studios/detail/1/schillerplatz.html"
+},
+{
+ id:"almanac", name:"Almanac Palais Vienna Spa", kind:"spa",
+ addr:"Parkring 14–16, 1010 Wien", lat:48.20560, lon:16.38080,
+ min:10, transfers:0, route:"<b>850 m walk</b> via Kärntner Ring → Schwarzenbergplatz, or <b>tram 2</b> → Weihburggasse", stop:"Kärntner Ring, Oper (1/2/71/D)",
+ price:50.00, lap:false, sauna:true,
+ tags:["14 m indoor pool","Sauna + steam + jacuzzi","€50 / 2 h, €65 / 4 h","Mon–Thu only"],
+ hours:{1:[["12:00","22:00"]],2:[["12:00","22:00"]],3:[["12:00","22:00"]],4:[["12:00","22:00"]],5:[],6:[],0:[]},
+ hoursTxt:"External spa access Mon–Thu 12:00–22:00 only (hotel guests 06:00–22:00)",
+ note:"Best-value proper hotel spa within walking distance, bought straight from the hotel's own voucher shop. Booking is mandatory and access is capped to Mon–Thu afternoons and evenings — no weekend or early-morning entry on a day pass.",
+ url:"https://www.almanachotels.com/vienna/wellness/"
+},
+{
+ id:"goldentree", name:"The Golden Tree Day Spa — Vienna Marriott", kind:"spa",
+ addr:"Parkring 12A, 1010 Wien", lat:48.20630, lon:16.38030,
+ min:10, transfers:0, route:"<b>800 m walk</b> east via Kärntner Ring → Parkring, or <b>tram 2</b> → Weihburggasse", stop:"Kärntner Ring, Oper (1/2/71/D)",
+ price:45.00, lap:false, sauna:true,
+ tags:["12 × 7 m pool 28–29 °C","Finnish + bio sauna","Steam, infrared, hammam","No booking needed","Daily 08:00–22:00"],
+ hours:{1:[["08:00","22:00"]],2:[["08:00","22:00"]],3:[["08:00","22:00"]],4:[["08:00","22:00"]],5:[["08:00","22:00"]],6:[["08:00","22:00"]],0:[["08:00","22:00"]]},
+ hoursTxt:"Daily including holidays 08:00–22:00",
+ note:"€45 walk-in day card, no reservation required, towels and robe included — the easiest wellness afternoon near you. The pool is for soaking, not swimming.",
+ url:"https://www.aurim.net/en/tageskarte-day-spa-wien"
+},
+{
+ id:"mandarin", name:"The Spa at Mandarin Oriental", kind:"spa",
+ addr:"Riemergasse 7, 1010 Wien", lat:48.20730, lon:16.37750,
+ min:15, transfers:0, route:"<b>Tram 2</b> from Kärntner Ring, Oper → Stubentor, 300 m walk", stop:"Stubentor (tram 2)",
+ price:null, lap:false, sauna:true,
+ tags:["13 m indoor pool","Sauna + steam","Gym open 24 h","Adults 16+","Booking required"],
+ hours:{1:[["09:00","21:00"]],2:[["09:00","21:00"]],3:[["09:00","21:00"]],4:[["09:00","21:00"]],5:[["09:00","21:00"]],6:[["09:00","21:00"]],0:[["09:00","21:00"]]},
+ hoursTxt:"Spa reception 09:00–21:00 · pool 07:00–21:00 for residents · family swim 11:00–14:00",
+ note:"Day-spa access for non-residents is confirmed but the price is not published anywhere — email movie-spa@mohg.com. Minimum age 16.",
+ url:"https://www.mandarinoriental.com/en/vienna/inner-city/wellness"
+},
+{
+ id:"parkhyatt", name:"Arany Spa — Park Hyatt Vienna", kind:"spa",
+ addr:"Am Hof 2, 1010 Wien", lat:48.21100, lon:16.36750,
+ min:20, transfers:0, route:"<b>U1</b> Karlsplatz → Stephansplatz, 600 m walk via Graben", stop:"Stephansplatz (U1/U3)",
+ price:null, lap:false, sauna:true, early:true,
+ tags:["15 m pool in a bank vault","Underwater music","1,000 m² spa","Opens 07:00","Booking required"],
+ hours:{1:[["07:00","21:00"]],2:[["07:00","21:00"]],3:[["07:00","21:00"]],4:[["07:00","21:00"]],5:[["07:00","21:00"]],6:[["07:00","21:00"]],0:[["07:00","21:00"]]},
+ hoursTxt:"Daily 07:00–21:00 (children only 11:00–18:00)",
+ note:"The pool sits in the vault of a former bank — the most striking room you can swim in in Vienna. Non-guest day access is confirmed by the hotel but unpriced; a third-party listing quotes about €85. Book on spa-arany.vienna@hyatt.com.",
+ url:"https://www.hyatt.com/park-hyatt/en-US/vieph-park-hyatt-vienna/spa-wellness"
+},
+{
+ id:"anantara", name:"Anantara Spa — Palais Hansen", kind:"spa",
+ addr:"Schottenring 24, 1010 Wien", lat:48.21570, lon:16.36830,
+ min:15, transfers:0, route:"<b>U4</b> Karlsplatz → Schottenring — the hotel is at the station exit", stop:"Schottenring (U2/U4)",
+ price:null, lap:false, sauna:true,
+ tags:["800 m² art-deco spa","6 m hydropool — soaking only","Sauna, sanarium, hammam","Ladies' sauna","3-hour day pass"],
+ hours:{1:[["10:00","21:00"]],2:[["10:00","21:00"]],3:[["10:00","21:00"]],4:[["10:00","21:00"]],5:[["10:00","21:00"]],6:[["10:00","21:00"]],0:[["10:00","21:00"]]},
+ hoursTxt:"Daily 10:00–21:00 (under-16s 10:00–16:00 with a parent)",
+ note:"Formerly Palais Hansen Kempinski. A three-hour day pass is sold but the price isn't public; a third-party listing quotes €55–65. Come for the sauna world — the water is a 6 m hydrotherapy pool, not for swimming.",
+ url:"https://www.anantara.com/en/palais-hansen-vienna/spa"
+},
+{
+ id:"johnharris-dc", name:"John Harris DC Tower", kind:"spa",
+ addr:"Donau-City-Straße 7, 1220 Wien", lat:48.24040, lon:16.41460,
+ min:25, transfers:0, route:"<b>U1</b> Karlsplatz → Kaisermühlen-VIC, 500 m walk through Donau City", stop:"Kaisermühlen-VIC (U1)",
+ price:38.00, lap:false, sauna:true, early:true,
+ tags:["10 m panorama pool high in the tower","Panorama sauna with city view","Steam bath","Opens 06:30"],
+ hours:{1:[["06:30","22:00"]],2:[["06:30","22:00"]],3:[["06:30","22:00"]],4:[["06:30","22:00"]],5:[["06:30","22:00"]],6:[["09:00","21:00"]],0:[["09:00","21:00"]]},
+ hoursTxt:"Mon–Fri 06:30–22:00 · Sat/Sun/holidays 09:00–21:00",
+ note:"You come for the view, not the swim — a 10 m pool and a sauna looking out over Vienna from Austria's tallest building. €38 is a \"from\" price off their booking listing.",
+ url:"https://www.johnharris.at/de/studios/detail/3/dc-tower.html"
+},
+{
+ id:"holmes-huetteldorf", name:"Holmes Place Hütteldorf", kind:"spa",
+ addr:"Hütteldorfer Straße 130a, 1140 Wien", lat:48.19880, lon:16.31050,
+ min:40, transfers:2, route:"<b>U1</b> → Stephansplatz, <b>U3</b> → Hütteldorfer Straße, <b>tram 49</b> two stops", stop:"Hütteldorfer Straße (U3) + tram 49",
+ price:35.00, lap:false, sauna:true, early:true,
+ tags:["4,000 m² club","Whirlpool + steam","Mixed and women-only sauna","Free parking","Opens 06:30"],
+ hours:{1:[["06:30","23:00"]],2:[["06:30","23:00"]],3:[["06:30","23:00"]],4:[["06:30","23:00"]],5:[["06:30","22:00"]],6:[["08:00","21:00"]],0:[["08:00","21:00"]]},
+ hoursTxt:"Mon–Thu 06:30–23:00 · Fri 06:30–22:00 · Sat/Sun 08:00–21:00",
+ note:"€35 day pass, published on Holmes Place's own price page. The pool length is nowhere stated — they only call it \"optimal for swimming\" — so I can't promise it takes lap sets.",
+ url:"https://www.holmesplace.at/preise"
+},
+
+/* ---------- WELLNESS: SAUNA WITHOUT A POOL ---------- */
+{
+ id:"einsiedlerbad", name:"Einsiedlerbad — city sauna", kind:"wellness",
+ addr:"Einsiedlerplatz 18, 1050 Wien", lat:48.18550, lon:16.35650,
+ min:20, transfers:0, route:"<b>U4</b> Karlsplatz → Pilgramgasse, 8 min walk", stop:"Pilgramgasse (U4)",
+ price:17.70, lap:false, sauna:true,
+ tags:["Finnish sauna","Steam bath","Infrared cabin","Cold plunge","Step-free throughout"],
+ hours:{1:[],2:[],3:[],4:[],5:[],6:[],0:[]},
+ hoursTxt:"€17.70 for 5 h · €14.40 evening card (last 2.5 h) · €3.60 per extra hour",
+ closed:{from:"2026-06-15", to:"2026-09-13", why:"All city sauna baths shut 15 June – 13 September. Reopens 14 September 2026."},
+ note:"The most accessible of the city saunas — step-free parking, lockers, WC, shower and lift. Nude sauna area, with mixed, men-only and women-only slots. The city takes the weekday timetable offline during the closure, so ring +43 1 544 71 37 in September for the gendered days.",
+ url:"https://www.wien.gv.at/freizeit/einsiedlerbad"
+},
+{
+ id:"apostelbad", wfs:"Apostelbad", name:"Apostelbad — city sauna", kind:"wellness",
+ addr:"Apostelgasse 18, 1030 Wien", lat:48.19220, lon:16.39310,
+ min:20, transfers:1, route:"<b>U4</b> → Landstraße, <b>U3</b> → Rochusgasse, 5 min walk", stop:"Rochusgasse (U3)",
+ price:17.70, lap:false, sauna:true,
+ tags:["Finnish sauna","Steam bath","Cold plunge","Shower cabins"],
+ hours:{1:[],2:[],3:[],4:[],5:[],6:[],0:[]},
+ hoursTxt:"€17.70 for 5 h · €14.40 evening card · shower cabin €3.60/h",
+ closed:{from:"2026-06-15", to:"2026-09-13", why:"All city sauna baths shut 15 June – 13 September. Reopens 14 September 2026."},
+ note:"Nude sauna area with mixed and single-gender slots. Timetable unpublished during the closure — +43 1 713 11 71.",
+ url:"https://www.wien.gv.at/freizeit/apostelbad"
+},
+{
+ id:"hermannbad", wfs:"Hermannbad", name:"Hermannbad — city sauna", kind:"wellness",
+ addr:"Hermanngasse 28, 1070 Wien", lat:48.20100, lon:16.34750,
+ min:20, transfers:1, route:"<b>U1</b> → Stephansplatz, <b>U3</b> → Neubaugasse, 6 min walk", stop:"Neubaugasse (U3)",
+ price:17.70, lap:false, sauna:true,
+ tags:["Finnish sauna","Steam bath","Cold plunge","Infrared cabin","Massage","Buffet"],
+ hours:{1:[],2:[],3:[],4:[],5:[],6:[],0:[]},
+ hoursTxt:"€17.70 for 5 h · €14.40 evening card · €3.60 per extra hour",
+ closed:{from:"2026-06-15", to:"2026-09-13", why:"All city sauna baths shut 15 June – 13 September. Reopens 14 September 2026."},
+ note:"The best-equipped city sauna — infrared cabin, massage and a buffet on top of the sauna and steam. Nude area, mixed and single-gender slots. +43 1 4000 442 50.",
+ url:"https://www.wien.gv.at/freizeit/hermannbad"
+},
+{
+ id:"penzingerbad", wfs:"Penzinger Bad", name:"Penzinger Bad — city sauna", kind:"wellness",
+ addr:"Hütteldorfer Straße 136, 1140 Wien", lat:48.19750, lon:16.30950,
+ min:30, transfers:1, route:"<b>U1</b> → Stephansplatz, <b>U3</b> → Hütteldorfer Straße, 3 min walk", stop:"Hütteldorfer Straße (U3)",
+ price:17.70, lap:false, sauna:true,
+ tags:["Finnish sauna","Steam bath","Infrared cabin","Cold plunge","Outdoor Mehrzweckbecken","Massage"],
+ hours:{1:[],2:[],3:[],4:[],5:[],6:[],0:[]},
+ hoursTxt:"€17.70 for 5 h · €14.40 evening card · €3.60 per extra hour",
+ closed:{from:"2026-06-15", to:"2026-09-13", why:"All city sauna baths shut 15 June – 13 September. Reopens 14 September 2026."},
+ note:"The only city sauna bath that also has a real outdoor pool rather than just a cold plunge — so it half belongs in the swimming list too. +43 1 914 61 50.",
+ url:"https://www.wien.gv.at/freizeit/penzinger-bad"
+},
+{
+ id:"volksbad-fkg", wfs:"Brausebad Friedrich-Kaiser-Gasse", name:"Volksbad Friedrich-Kaiser-Gasse", kind:"wellness",
+ addr:"Friedrich-Kaiser-Gasse 11, 1160 Wien", lat:48.21000, lon:16.32100,
+ min:30, transfers:1, route:"<b>U1</b> → Stephansplatz, <b>U3</b> → Kendlerstraße, 6 min walk", stop:"Kendlerstraße (U3)",
+ price:3.60, lap:false, sauna:false,
+ tags:["Shower cabins only — no sauna","Tub baths €5.40","Vienna's last Tröpferlbad","Free under 18"],
+ hours:{1:[],2:[],3:[["13:00","19:00"]],4:[["13:00","19:00"]],5:[["09:00","19:00"]],6:[["08:00","18:00"]],0:[]},
+ hoursTxt:"Wed/Thu 13:00–19:00 · Fri 09:00–19:00 · Sat 08:00–18:00 · Sun–Tue closed",
+ closed:{from:"2026-07-27", to:"2026-08-16", why:"Short summer break — reopens 17 August 2026."},
+ note:"Included for completeness, but be clear what it is: the last surviving city Brausebad, meaning paid shower cabins and bathtubs for washing. No sauna, no steam, no wellness. €3.60 an hour, free for under-18s.",
+ url:"https://www.wien.gv.at/freizeit/volksbad-friedrich-kaiser-gasse"
+},
+{
+ id:"sacherspa", name:"Sacher Boutique Spa", kind:"wellness",
+ addr:"Philharmonikerstraße 4, 1010 Wien", lat:48.20350, lon:16.36950,
+ min:5, transfers:0, route:"<b>400 m walk</b> — one block behind the Opera", stop:"Walking distance",
+ price:null, lap:false, sauna:true,
+ tags:["Finnish sauna","Steam bath","Gym open 24 h","No pool","Closest sauna to home"],
+ hours:{1:[["15:00","22:00"]],2:[["15:00","22:00"]],3:[["15:00","22:00"]],4:[["15:00","22:00"]],5:[["15:00","22:00"]],6:[["15:00","22:00"]],0:[["15:00","22:00"]]},
+ hoursTxt:"Sauna daily 15:00–22:00 (earlier at weekends or on request) · treatments 11:00–19:00",
+ note:"Five minutes' walk and the only central hotel sauna with no pool. Sacher publishes no day-access price and doesn't say whether outside guests can buy sauna-only entry — in practice it seems to come with a treatment. Confirm on +43 1 51456 1352 before counting on it.",
+ url:"https://www.sacher.com/en/vienna/boutique-spa/fitness-wellness/"
+},
+{
+ id:"asaya", name:"Asaya Spa — Rosewood Vienna", kind:"wellness",
+ addr:"Petersplatz 7, 1010 Wien", lat:48.20980, lon:16.37000,
+ min:15, transfers:0, route:"<b>U1</b> Karlsplatz → Stephansplatz, 6 min walk via Graben", stop:"Stephansplatz (U1/U3)",
+ price:null, lap:false, sauna:true,
+ tags:["Sauna","Steam bath","Experience shower","No pool","Daily 09:00–21:00"],
+ hours:{1:[["09:00","21:00"]],2:[["09:00","21:00"]],3:[["09:00","21:00"]],4:[["09:00","21:00"]],5:[["09:00","21:00"]],6:[["09:00","21:00"]],0:[["09:00","21:00"]]},
+ hoursTxt:"Sauna & steam daily 09:00–21:00 · treatments 11:30–19:00",
+ note:"Small, central hotel spa with confirmed facilities and hours, but no published price and no confirmation that non-residents can buy sauna-only access. Ask at vienna.asayaspa@rosewoodhotels.com.",
+ url:"https://www.rosewoodhotels.com/de/vienna/wellness"
+},
+{
+ id:"hilight", name:"HiLight Suites — Private Wellness", kind:"wellness",
+ addr:"Salesianergasse 2, 1030 Wien", lat:48.19950, lon:16.38300,
+ min:20, transfers:0, route:"<b>U4</b> Karlsplatz → Stadtpark, 8 min walk (or tram 71 to Am Heumarkt)", stop:"Stadtpark (U4)",
+ price:100.00, lap:false, sauna:true,
+ tags:["Whole area to yourself","Finnish + soft sauna","Infrared cabin","Salt-therapy zone","2-hour slots"],
+ hours:{1:[["10:00","22:00"]],2:[["10:00","22:00"]],3:[["10:00","22:00"]],4:[["10:00","22:00"]],5:[["10:00","22:00"]],6:[["10:00","22:00"]],0:[["10:00","22:00"]]},
+ hoursTxt:"Daily 10:00–22:00, booked as 2-hour private slots",
+ note:"€100 books the entire wellness area for up to 2 people (€190 for 4) — about €50 a head for a couple, and nobody else in the room. Reserve on +43 1 710 7808 and confirm day-guest access, since the page doesn't state it explicitly.",
+ url:"https://www.hilighthotel.com/en/amenities/private-wellness/"
+},
+{
+ id:"taiga", name:"TAIGA Spa — Russian banya", kind:"wellness",
+ addr:"Helferstorferstraße 6, 1010 Wien", lat:48.21180, lon:16.36600,
+ min:20, transfers:0, route:"<b>U1</b> Karlsplatz → Stephansplatz, 9 min walk (or tram 1/2 to Schottentor)", stop:"Stephansplatz (U1) / Schottentor (1/2)",
+ price:150.00, lap:false, sauna:true,
+ tags:["Aroma sauna with birch venik whisking","Russian ice room","Pine foot bath","Private sessions only"],
+ hours:{1:[["10:00","22:00"]],2:[["10:00","22:00"]],3:[["10:00","22:00"]],4:[["10:00","22:00"]],5:[["10:00","22:00"]],6:[["10:00","22:00"]],0:[["10:00","22:00"]]},
+ hoursTxt:"Hours not published — slots are whatever the booking system offers. Call +43 660 950 8090.",
+ note:"The real banya experience in Vienna, birch-branch whisking and all. Not a walk-in: the cheapest way in is “Taiga für Alle” at €150 per person for 3 h, minimum two people. Private hire runs €450–960.",
+ url:"https://taiga-spa.at/"
+},
+{
+ id:"wellone", name:"WELL/ONE Private Spa", kind:"wellness",
+ addr:"Brünner Straße 73a, 1210 Wien", lat:48.27900, lon:16.39300,
+ min:45, transfers:2, route:"<b>U4</b> → Spittelau, <b>U6</b> → Floridsdorf, <b>bus 30A/31A</b> north", stop:"Brünner Straße (30A/31A)",
+ price:null, lap:false, sauna:true,
+ tags:["Private cabin with its own sauna","Massage whirlpool","Rain shower","Open till 01:00","Free parking"],
+ hours:{1:[["09:00","23:59"]],2:[["09:00","23:59"]],3:[["09:00","23:59"]],4:[["09:00","23:59"]],5:[["09:00","23:59"]],6:[["09:00","23:59"]],0:[["09:00","23:59"]]},
+ hoursTxt:"Daily 09:00–01:00 · advance online booking required",
+ note:"You rent a private cabin with its own sauna rather than sharing a sauna room, and it runs until 1 am. Prices are behind a JavaScript booking widget so I won't quote a figure — directories suggest roughly €25 per person per hour. Confirm on +43 1 290 81 230. Far out in Floridsdorf.",
+ url:"https://www.well-one.me/"
+},
+{
+ id:"sargfabrik", name:"Badehaus Sargfabrik — public evenings", kind:"wellness",
+ addr:"Goldschlagstraße 169, 1140 Wien", lat:48.19650, lon:16.31400,
+ min:30, transfers:1, route:"<b>U1</b> → Stephansplatz, <b>U3</b> → Johnstraße, 8 min walk", stop:"Johnstraße (U3)",
+ price:15.00, lap:false, sauna:true,
+ tags:["Finnish sauna","Roman tepidarium","Cold plunge","Whirlpool","€15, €10 under 27","Card payment only"],
+ hours:{1:[],2:[],3:[],4:[],5:[],6:[],0:[]},
+ hoursTxt:"Public bathing evenings only, 18:00–24:00 on scheduled dates",
+ closed:{from:"2026-06-01", to:"2026-09-27", why:"No public dates in July or August. The calendar restarts Mon 28 September 2026, then Wed 21 Oct (women only), Mon 26 Oct, Wed 18 Nov, Mon 23 Nov, Wed 16 Dec, Mon 21 Dec."},
+ note:"A 350 m² architectural bathhouse in a former coffin factory, normally members-only with a multi-year waiting list — but it opens to the public on a handful of evenings a year for €15. Worth putting 28 September in the diary.",
+ url:"https://sargfabrik.at/baden/badehaus"
+}
+];
+
+/* ---------------- state ---------------- */
+let LIVE = {};       // wfs name -> props
+let LIVE_TS = null;
+let WX = null;       // open-meteo daily, keyed by yyyy-mm-dd
+let SNAP_MODE = false;
+
+/* Baked-in fallback: a real reading of the Bäderampel, used when the page is
+   opened somewhere that blocks outbound requests (e.g. the artifact panel). */
+const SNAPSHOT = {
+  ts: "29.07.2026 11:55",
+  days: ["2026-07-29","2026-07-30","2026-07-31","2026-08-01"],
+  cats: {
+    "Strandbad Alte Donau":[1,1,1,1], "Kombibad Brigittenau":[1,1,1,1], "Laaerbergbad":[1,1,1,1],
+    "Strandbad Gänsehäufel":[1,1,1,1], "Liesinger Bad":[1,1,1,1], "Schafbergbad":[1,1,1,1],
+    "Hietzinger Bad":[1,1,1,1], "Kombibad Jörgerbad":[0,0,0,0], "Kombibad Simmering":[1,1,1,1],
+    "Kombibad Döbling":[1,1,1,1], "Hallenbad Hütteldorf":[1,1,1,1], "Hallenbad Floridsdorf":[1,1,1,1],
+    "Höpflerbad":[1,1,1,1], "Ottakringerbad":[1,1,1,1], "Krapfenwaldl Bad":[1,1,1,1],
+    "Theresienbad":[1,1,1,1], "Sommerbad Hadersdorf-Weidlingau":[1,1,1,1],
+    "Kombibad Großfeldsiedlung":[1,1,1,1], "Amalienbad":[0,0,0,0], "Kombibad Donaustadt":[1,1,1,1],
+    "Strandbad Angelibad":[1,1,1,1], "Kongreßbad":[1,1,1,1],
+    "Stadionbad":[-99,null,null,null], "Stadthallenbad":[-99,null,null,null],
+    "Therme Wien":[-99,null,null,null], "Badeschiff Wien":[-99,null,null,null]
+  }
+};
+const CATTXT = {0:"geschlossen", 1:"Noch Platz", 2:"Gut besucht", 3:"Sehr voll"};
+
+function useSnapshot(){
+  SNAP_MODE = true; LIVE = {}; LIVE_TS = SNAPSHOT.ts;
+  for(const name in SNAPSHOT.cats){
+    const c = SNAPSHOT.cats[name], o = {NAME:name, TIMESTAMP_MODIFIED_FORMAT:SNAPSHOT.ts};
+    for(let i=0;i<4;i++){
+      o["AUSLASTUNG_AMPEL_KATEGORIE_"+i] = c[i];
+      o["AUSLASTUNG_AMPEL_KAT_TXT_"+i] = (c[i]===null||c[i]===-99) ? null : CATTXT[c[i]];
+      o["AUSLASTUNG_TAG_"+i+"_TEXT"] = SNAPSHOT.days[i];
+    }
+    LIVE[name] = o;
+  }
+}
+function snapshotIsStale(){
+  return iso(new Date()) !== SNAPSHOT.days[0];
+}
+const state = {type:"all", feats:new Set(), openOnly:false, maxTime:75, sort:"time"};
+
+/* ---------------- helpers ---------------- */
+const pad = n => String(n).padStart(2,"0");
+function mins(hhmm){const [h,m]=hhmm.split(":").map(Number);return h*60+m;}
+function nowMin(d){return d.getHours()*60+d.getMinutes();}
+function iso(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+
+function saunaShut(p, now){
+  if(!p.sauna || !p.saunaClosed) return false;
+  const t = iso(now);
+  return t >= p.saunaClosed.from && t <= p.saunaClosed.to;
+}
+function fmtDay(d){
+  const dt = new Date(d+"T12:00:00");
+  return dt.toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+}
+
+function openState(p, now){
+  const t = iso(now);
+  if(p.closed && t >= p.closed.from && t <= p.closed.to) return {s:"closed", txt:"Closed for maintenance", hard:true};
+  const wins = (p.hours && p.hours[now.getDay()]) || [];
+  if(!wins.length) return {s:"closed", txt:"Closed today"};
+  const n = nowMin(now);
+  for(const [a,b] of wins){
+    const A=mins(a), B=mins(b);
+    if(n>=A && n<B){
+      if(A===0 && B>=1439) return {s:"open", txt:"Open around the clock"};
+      const left = B-n;
+      if(left<=60) return {s:"soon", txt:"Closes in "+left+" min"};
+      return {s:"open", txt:"Open until "+(B>=1439?"midnight":b)};
+    }
+  }
+  const next = wins.map(w=>mins(w[0])).filter(m=>m>n).sort((x,y)=>x-y)[0];
+  if(next!=null){
+    const inMin = next-n;
+    return {s:"closed", txt: inMin<=90 ? "Opens in "+inMin+" min" : "Opens "+wins.find(w=>mins(w[0])===next)[0]};
+  }
+  return {s:"closed", txt:"Closed for today"};
+}
+
+function occ(p){
+  if(SNAP_MODE && snapshotIsStale()) return {k:0, txt:"Occupancy unavailable here", cls:"s-none"};
+  const d = p.wfs ? LIVE[p.wfs] : null;
+  if(!d) return {k:0, txt:"No live data", cls:"s-none"};
+  const cat = d.AUSLASTUNG_AMPEL_KATEGORIE_0;
+  const txt = d.AUSLASTUNG_AMPEL_KAT_TXT_0;
+  if(txt && /geschlossen/i.test(txt)) return {k:0, txt:"Closed (per Bäderampel)", cls:"s-none"};
+  if(cat===1) return {k:1, txt: txt||"Noch Platz", cls:"s-ok"};
+  if(cat===2) return {k:2, txt: txt||"Gut besucht", cls:"s-warn"};
+  if(cat>=3)  return {k:3, txt: txt||"Sehr voll", cls:"s-bad"};
+  return {k:0, txt:"No live data", cls:"s-none"};
+}
+
+function forecast(p){
+  const d = p.wfs ? LIVE[p.wfs] : null;
+  if(!d) return null;
+  const out=[];
+  for(let i=0;i<4;i++){
+    const dateStr = d["AUSLASTUNG_TAG_"+i+"_TEXT"];
+    const cat = d["AUSLASTUNG_AMPEL_KATEGORIE_"+i];
+    if(!dateStr) continue;
+    const dt = new Date(dateStr+"T12:00:00");
+    const w = wxFor(dateStr);
+    out.push({lbl: i===0 ? "Today" : dt.toLocaleDateString("en-GB",{weekday:"short"}),
+              k: (cat>=1&&cat<=3)?cat:0,
+              t: (w && outdoorKind(p.kind)) ? Math.round(w.tmax)+"°" : null});
+  }
+  return out.length ? out : null;
+}
+
+const WCODE = {0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Overcast",45:"Fog",48:"Fog",51:"Drizzle",53:"Drizzle",55:"Drizzle",61:"Rain",63:"Rain",65:"Heavy rain",71:"Snow",73:"Snow",75:"Snow",80:"Showers",81:"Showers",82:"Heavy showers",95:"Thunderstorm",96:"Thunderstorm",99:"Thunderstorm"};
+const outdoorKind = k => k==="outdoor" || k==="open-water";
+
+function wxFor(dateStr){ return WX ? WX[dateStr] : null; }
+
+function wxRow(p, now){
+  if(!outdoorKind(p.kind)) return "";
+  const w = wxFor(iso(now));
+  if(!w) return "";
+  const hot = w.tmax >= 30, wet = w.rain >= 50;
+  const cls = wet ? " wet" : (hot ? " hot" : "");
+  const desc = WCODE[w.code] || "";
+  let hint = "";
+  if(wet) hint = "can close from 15:00";
+  else if(w.tmax < 20) hint = "cool for outdoors";
+  return '<div class="wx'+cls+'"><span class="t">'+Math.round(w.tmax)+'°</span><span>'+desc+
+         '</span><span class="r">'+w.rain+'% rain'+(hint?' · '+hint:'')+'</span></div>';
+}
+
+function mapUrl(p){
+  return "https://www.google.com/maps/dir/?api=1&origin="+HOME.q+
+         "&destination="+encodeURIComponent(p.addr)+"&travelmode=transit";
+}
+
+/* ---------------- filtering ---------------- */
+function applyFilters(st, now){
+  let list = POOLS.slice();
+  if(st.type!=="all") list = list.filter(p=>p.kind===st.type);
+  if(st.feats.has("lap"))   list = list.filter(p=>p.lap);
+  if(st.feats.has("sauna")) list = list.filter(p=>p.sauna && !saunaShut(p, now));
+  if(st.feats.has("pass"))  list = list.filter(p=>p.covered);
+  if(st.feats.has("cheap")) list = list.filter(p=>p.covered || (p.price!==null && p.price<12));
+  if(st.feats.has("early")) list = list.filter(p=>p.early);
+  list = list.filter(p=>p.min<=st.maxTime);
+  if(st.openOnly) list = list.filter(p=>openState(p,now).s!=="closed");
+  return list;
+}
+/* how many results would remain if this option were selected? */
+function previewCount(kind, val, now){
+  const st = {type:state.type, feats:new Set(state.feats), openOnly:state.openOnly, maxTime:state.maxTime};
+  if(kind==="type") st.type = val;
+  else if(kind==="feat"){ st.feats.has(val) ? st.feats.delete(val) : st.feats.add(val); }
+  else if(kind==="open"){ st.openOnly = !st.openOnly; }
+  return applyFilters(st, now).length;
+}
+function paintChipCounts(now){
+  document.querySelectorAll("#fType .chip").forEach(c=>{
+    const n = previewCount("type", c.dataset.v, now);
+    c.querySelector(".n").textContent = n;
+    c.classList.toggle("zero", n===0 && !c.classList.contains("on"));
+  });
+  document.querySelectorAll("#fFeat .chip").forEach(c=>{
+    const n = previewCount("feat", c.dataset.v, now);
+    c.querySelector(".n").textContent = n;
+    c.classList.toggle("zero", n===0 && !c.classList.contains("on"));
+  });
+  const oc = document.querySelector("#fOpen .chip");
+  const n = previewCount("open", "1", now);
+  oc.querySelector(".n").textContent = n;
+  oc.classList.toggle("zero", n===0 && !oc.classList.contains("on"));
+}
+
+/* ---------------- render ---------------- */
+function render(){
+  const now = new Date();
+  const grid = document.getElementById("grid");
+  let list = applyFilters(state, now);
+  paintChipCounts(now);
+
+  const key = {time:p=>p.min, name:p=>p.name, price:p=>(p.price===null?999:p.price)};
+  if(state.sort==="busy"){
+    list.sort((a,b)=>{
+      const oa=occ(a), ob=occ(b);
+      const ra = oa.k===0 ? 9 : oa.k, rb = ob.k===0 ? 9 : ob.k;
+      return ra-rb || a.min-b.min;
+    });
+  } else {
+    const f=key[state.sort]; list.sort((a,b)=> f(a)>f(b)?1:f(a)<f(b)?-1:0);
+  }
+  /* anything shut for maintenance always sinks to the bottom, whatever the sort */
+  list.sort((a,b)=> (openState(a,now).hard?1:0) - (openState(b,now).hard?1:0));
+
+  document.getElementById("count").textContent = list.length+" of "+POOLS.length+" places";
+
+  renderPass(now);
+
+  /* offline / snapshot notice */
+  const nEl = document.getElementById("notice");
+  if(SNAP_MODE){
+    nEl.innerHTML = '<div class="banner" style="background:rgba(111,214,255,.08);border-color:rgba(111,214,255,.3);color:#a9d9f2">'+
+      '<span class="em">🔌</span><div><b style="color:var(--accent2)">This view can\'t reach the internet</b>, so occupancy and weather '+
+      'aren\'t updating. It\'s showing '+(snapshotIsStale()
+        ? 'a stored reading from '+SNAPSHOT.ts+', which is now out of date — treat the colours as unknown.'
+        : 'the stored reading from '+SNAPSHOT.ts+'.')+
+      ' <b style="color:var(--accent2)">Open the downloaded HTML file in Safari or Chrome</b> and everything goes live. '+
+      'Hours, prices, routes and travel times below are correct either way.</div></div>';
+  } else nEl.innerHTML = "";
+
+  /* heat / rain banner */
+  const bEl = document.getElementById("banner");
+  const w = wxFor(iso(now));
+  if(w && w.tmax >= 32){
+    bEl.innerHTML = '<div class="banner"><span class="em">🔥</span><div><b>'+Math.round(w.tmax)+
+      '° today.</b> The city extends several outdoor pools to 20:00 during heat spells, and they fill up — '+
+      'aim for opening time or after 16:00 (€4.90 late ticket). The Alte Donau and Donauinsel stay cool and never close.</div></div>';
+  } else if(w && w.rain >= 60){
+    bEl.innerHTML = '<div class="banner"><span class="em">🌧</span><div><b>'+w.rain+
+      '% chance of rain today.</b> Outdoor pools are allowed to close from 15:00 in bad weather — '+
+      'check before travelling, or pick an indoor pool.</div></div>';
+  } else bEl.innerHTML = "";
+
+  grid.innerHTML = list.map(p=>{
+    const os = openState(p,now);
+    const o = os.hard ? {k:0, txt:"Closed — no live status", cls:"s-none"} : occ(p);
+    const fc = os.hard ? null : forecast(p);
+    const shut = os.hard ? " shut" : "";
+    const pill = os.s==="open" ? '<span class="pill open">Open</span>'
+               : os.s==="soon" ? '<span class="pill soon">Closing</span>'
+               : '<span class="pill closed">Closed</span>';
+    const price = p.covered ? "Included in your pass"
+                : p.price===null ? "Price on request"
+                : p.price===0 ? "Free" : "€"+p.price.toFixed(2);
+    const visitsHere = VISITS.filter(v=>v.id===p.id).length;
+    const fcHtml = fc ? '<div class="fc">'+fc.map(d=>
+        '<div class="d k'+d.k+'"><span class="dl">'+d.lbl+'</span>'+
+        (d.t?'<span class="dt">'+d.t+'</span>':'')+'<span class="dv"></span></div>').join("")+'</div>' : "";
+    const noteHtml = os.hard
+      ? '<div class="note bad">'+ (p.closed?p.closed.why:"Closed") +'</div>'
+      : (p.note ? '<div class="note">'+p.note+'</div>' : "");
+
+    return `<div class="card ${o.cls}${shut}">
+      <div class="top">
+        <div><div class="nm">${p.name}</div><div class="addr">${p.addr}</div></div>
+        <div class="tt"><div class="big">${p.min}</div><div class="u">min away</div></div>
+      </div>
+      <div class="status ${o.cls}">
+        <span class="sdot"></span><span class="txt">${o.txt}</span>
+        <span class="sm">${p.wfs? "Bäderampel" : "not in feed"}</span>
+      </div>
+      ${os.hard ? "" : wxRow(p, now)}
+      ${fcHtml}
+      <div class="openrow">${pill}<span class="h">${os.txt}</span></div>
+      <div class="route">${p.route}<br><span style="color:var(--dim2)">Exit: ${p.stop}${p.transfers?" · "+p.transfers+" change"+(p.transfers>1?"s":""):" · direct"}</span></div>
+      <div class="tags"><span class="tag ${p.covered?'inc':'pr'}">${price}</span>${
+        visitsHere ? '<span class="tag been">Been '+visitsHere+'×</span>' : ""
+      }${
+        saunaShut(p,now) ? '<span class="tag shutx">Sauna shut until '+fmtDay(p.saunaClosed.to)+'</span>' : ""
+      }${p.tags.map(t=>'<span class="tag">'+t+'</span>').join("")}</div>
+      ${noteHtml}
+      <div class="links">
+        <a class="lk go" href="${mapUrl(p)}" target="_blank" rel="noopener">Directions →</a>
+        <a class="lk" href="${p.url}" target="_blank" rel="noopener">Official page</a>
+        <button class="lk logv" data-id="${p.id}" title="Log a visit">＋ Swam here</button>
+      </div>
+    </div>`;
+  }).join("") || emptyState(now);
+
+  if(!list.length){
+    const b = document.getElementById("clearFilters");
+    if(b) b.onclick = clearFilters;
+  }
+  grid.querySelectorAll(".logv").forEach(b=>{
+    b.onclick = () => logVisit(b.dataset.id);
+  });
+}
+
+function renderPass(now){
+  const el = document.getElementById("pass");
+  const n = VISITS.length;
+  const value = n * PASS.dayTicket;
+  const ahead = value - PASS.cost;
+  const pct = Math.min(100, (n / PASS.breakEven) * 100);
+  const end = new Date(PASS.to + "T12:00:00");
+  const daysLeft = Math.max(0, Math.round((end - now) / 86400000));
+  const total = Math.round((end - new Date(PASS.from+"T12:00:00")) / 86400000);
+  const perWeek = n ? (n / Math.max(1,(total-daysLeft)/7)) : 0;
+  const needed = Math.max(0, PASS.breakEven - n);
+  const weeksLeft = daysLeft/7;
+
+  let verdict;
+  if(ahead >= 0){
+    verdict = '<b class="good">You\'re €'+ahead.toFixed(2)+' ahead.</b> Every swim from here is free.';
+  } else if(n === 0){
+    verdict = 'Log your first swim to start tracking. You need <b>'+PASS.breakEven+' visits</b> to break even — that\'s about '+
+              (PASS.breakEven/(total/7)).toFixed(1)+' a week over the six months.';
+  } else {
+    const need = needed / Math.max(0.1, weeksLeft);
+    verdict = '<b>'+needed+' more visits</b> to break even — '+need.toFixed(1)+' a week for the '+
+              daysLeft+' days left. '+
+              (perWeek >= need ? '<b class="good">You\'re on pace.</b>' : 'Currently averaging '+perWeek.toFixed(1)+' a week.');
+  }
+
+  el.innerHTML =
+   '<div class="passbox">'+
+     '<div class="prow">'+
+       '<div><div class="plabel">'+PASS.name+'</div>'+
+         '<div class="pmeta">Valid to '+end.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})+
+         ' · '+daysLeft+' days left · sauna and non-city pools not included</div></div>'+
+       '<div class="pnum"><span class="pv">'+n+'</span><span class="pu">visit'+(n===1?'':'s')+' logged</span></div>'+
+       '<div class="pnum"><span class="pv">€'+value.toFixed(2)+'</span><span class="pu">of €'+PASS.cost.toFixed(2)+' used</span></div>'+
+       (n ? '<button class="btn" id="undoVisit">Undo last</button>' : '')+
+     '</div>'+
+     '<div class="pbar"><i style="width:'+pct+'%" class="'+(ahead>=0?'done':'')+'"></i></div>'+
+     '<div class="pverdict">'+verdict+'</div>'+
+     (storageWorks() ? '' :
+       '<div class="pwarn">This view can\'t save data, so the count resets when you reload. It sticks on the hosted version.</div>')+
+   '</div>';
+
+  const u = document.getElementById("undoVisit");
+  if(u) u.onclick = undoVisit;
+}
+
+function activeFilterLabels(){
+  const out = [];
+  if(state.type!=="all"){
+    const t = document.querySelector('#fType .chip[data-v="'+state.type+'"]');
+    if(t) out.push(t.dataset.label);
+  }
+  document.querySelectorAll("#fFeat .chip.on").forEach(c=>out.push(c.dataset.label));
+  if(state.openOnly) out.push("Open right now");
+  if(state.maxTime<75) out.push("under "+state.maxTime+" min away");
+  return out;
+}
+function emptyState(now){
+  const on = activeFilterLabels();
+  /* find which single filter, if dropped, brings results back */
+  let fix = null;
+  if(state.type!=="all" && applyFilters({...state, type:"all", feats:state.feats}, now).length) fix = "Show: All";
+  if(!fix) for(const f of state.feats){
+    const st={type:state.type,feats:new Set(state.feats),openOnly:state.openOnly,maxTime:state.maxTime};
+    st.feats.delete(f);
+    if(applyFilters(st, now).length){
+      const c=document.querySelector('#fFeat .chip[data-v="'+f+'"]');
+      fix = "turning off “"+(c?c.dataset.label:f)+"”"; break;
+    }
+  }
+  if(!fix && state.openOnly && applyFilters({...state, openOnly:false, feats:state.feats}, now).length) fix = "turning off “Only open right now”";
+  if(!fix && state.maxTime<75) fix = "raising the travel-time limit";
+
+  return '<div class="empty"><h3>No place matches all of those at once</h3>'+
+    '<p>You have '+(on.length? '<span class="why">'+on.join(" + ")+'</span>' : 'filters')+' selected, '+
+    'and nothing in Vienna ticks every one of those boxes at the same time.'+
+    (fix? '<br>Try '+(fix.startsWith("Show")? 'switching to <b>'+fix.replace("Show: ","")+'</b>' : fix)+'.' : '')+
+    '<br><span style="color:var(--dim2);font-size:12.5px">The number on each filter shows how many places you\'d be left with — '+
+    'a struck-through filter leads nowhere.</span>'+
+    '</p><button class="btn" id="clearFilters">Clear all filters</button></div>';
+}
+
+function clearFilters(){
+  state.type="all"; state.feats.clear(); state.openOnly=false; state.maxTime=75;
+  document.querySelectorAll("#fType .chip").forEach(c=>c.classList.toggle("on", c.dataset.v==="all"));
+  document.querySelectorAll("#fFeat .chip, #fOpen .chip").forEach(c=>c.classList.remove("on"));
+  document.getElementById("fTime").value=75;
+  document.getElementById("fTimeV").textContent="any";
+  render(); scrollToResults();
+}
+
+function scrollToResults(){
+  const g = document.getElementById("grid");
+  const c = document.querySelector(".controls");
+  const top = g.getBoundingClientRect().top + window.scrollY - (c ? c.offsetHeight + 16 : 16);
+  if(window.scrollY > top) window.scrollTo({top: Math.max(0, top), behavior:"smooth"});
+}
+
+/* ---------------- live fetch ---------------- */
+const WFS = "https://data.wien.gv.at/daten/geo?service=WFS&request=GetFeature&version=1.1.0&typeName=ogdwien:SCHWIMMBADOGD&srsName=EPSG:4326&outputFormat=json";
+const WXURL = "https://api.open-meteo.com/v1/forecast?latitude=48.2082&longitude=16.3738"+
+  "&daily=temperature_2m_max,precipitation_probability_max,weather_code&timezone=Europe%2FVienna&forecast_days=5";
+async function loadWx(){
+  try{
+    const r = await fetch(WXURL,{cache:"no-store"});
+    const j = await r.json();
+    WX = {};
+    j.daily.time.forEach((d,i)=>{ WX[d] = {
+      tmax: j.daily.temperature_2m_max[i],
+      rain: j.daily.precipitation_probability_max[i],
+      code: j.daily.weather_code[i]
+    };});
+  }catch(e){ WX = null; }
+}
+
+async function loadLive(){
+  const dot = document.getElementById("ldot"), st = document.getElementById("lstat");
+  dot.className="dot"; st.textContent="Loading live data…";
+  await loadWx();
+  try{
+    const r = await fetch(WFS, {cache:"no-store"});
+    const j = await r.json();
+    LIVE = {};
+    j.features.forEach(f=>{ LIVE[f.properties.NAME] = f.properties; });
+    const any = j.features.find(f=>f.properties.TIMESTAMP_MODIFIED_FORMAT);
+    LIVE_TS = any ? any.properties.TIMESTAMP_MODIFIED_FORMAT : null;
+    SNAP_MODE = false;
+    dot.className="dot live";
+    st.textContent = LIVE_TS ? "Live · updated "+LIVE_TS : "Live";
+  }catch(e){
+    useSnapshot();
+    dot.className="dot";
+    st.textContent = snapshotIsStale()
+      ? "Offline · snapshot from "+SNAPSHOT.ts
+      : "Snapshot · "+SNAPSHOT.ts;
+  }
+  render();
+}
+
+/* ---------------- wiring ---------------- */
+/* remember each chip's own label, then give it a live result counter */
+document.querySelectorAll("#fType .chip, #fFeat .chip, #fOpen .chip").forEach(c=>{
+  c.dataset.label = c.textContent.trim();
+  c.innerHTML = c.textContent.trim() + '<span class="n"></span>';
+});
+
+document.getElementById("fType").addEventListener("click",e=>{
+  const b=e.target.closest(".chip"); if(!b)return;
+  [...e.currentTarget.children].forEach(c=>c.classList.remove("on"));
+  b.classList.add("on"); state.type=b.dataset.v; render(); scrollToResults();
+});
+document.getElementById("fFeat").addEventListener("click",e=>{
+  const b=e.target.closest(".chip"); if(!b)return;
+  b.classList.toggle("on");
+  b.classList.contains("on") ? state.feats.add(b.dataset.v) : state.feats.delete(b.dataset.v);
+  render(); scrollToResults();
+});
+document.getElementById("fOpen").addEventListener("click",e=>{
+  const b=e.target.closest(".chip"); if(!b)return;
+  b.classList.toggle("on"); state.openOnly=b.classList.contains("on"); render(); scrollToResults();
+});
+document.getElementById("fTime").addEventListener("input",e=>{
+  state.maxTime=+e.target.value;
+  document.getElementById("fTimeV").textContent = state.maxTime>=75 ? "any" : "≤ "+state.maxTime+" min";
+  render();
+});
+document.getElementById("sort").addEventListener("change",e=>{state.sort=e.target.value;render();});
+document.getElementById("refresh").addEventListener("click",loadLive);
+
+document.getElementById("today").textContent =
+  new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+
+loadVisits();
+loadLive();
+setInterval(loadLive, 10*60*1000);   // refresh every 10 min
+setInterval(render, 60*1000);        // keep open/closed accurate
+</script>
+</body>
+</html>
