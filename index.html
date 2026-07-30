@@ -65,6 +65,29 @@
   /* grid */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 17px 14px;display:flex;flex-direction:column;gap:11px;transition:.15s;position:relative;overflow:hidden}
+
+  /* photos */
+  .photo{position:relative;margin:-16px -17px 0;line-height:0;background:var(--bg2);overflow:hidden}
+  .photo img{width:100%;height:170px;object-fit:cover;display:block;
+    filter:saturate(.92) brightness(.94);transition:.3s}
+  .card:hover .photo img{filter:saturate(1) brightness(1);transform:scale(1.015)}
+  .photo .credit{position:absolute;left:0;right:0;bottom:0;padding:14px 12px 7px;
+    font-size:10.5px;line-height:1.35;color:#cfe3ef;text-decoration:none;
+    background:linear-gradient(transparent,rgba(6,16,24,.86));display:block}
+  .photo .credit:hover{color:#fff;text-decoration:underline}
+  .photo.aerial img{height:150px;filter:saturate(.85) brightness(.9) contrast(1.05)}
+  .card:hover .photo.aerial img{filter:saturate(1) brightness(1) contrast(1.05)}
+  .photo.aerial .credit{font-size:10px;color:#b9d2e2}
+  .photo.aerial::after{content:"SATELLITE";position:absolute;top:8px;left:10px;font-size:9px;
+    letter-spacing:1.2px;font-weight:700;color:#dfeef7;background:rgba(6,16,24,.6);
+    padding:3px 7px;border-radius:4px;pointer-events:none}
+  .photo.failed{display:none}
+  .photo.none{display:flex;align-items:center;justify-content:center;height:64px;
+    text-decoration:none;border-bottom:1px solid var(--line);
+    background:repeating-linear-gradient(45deg,var(--bg2),var(--bg2) 10px,rgba(35,65,92,.28) 10px,rgba(35,65,92,.28) 20px)}
+  .photo.none span{font-size:11.5px;color:var(--dim2);line-height:1.3;text-align:center;padding:0 12px}
+  .photo.none:hover span{color:var(--accent)}
+  @media(max-width:640px){.photo{margin:-14px -14px 0}.photo img{height:150px}}
   .card:hover{border-color:#315c80;transform:translateY(-2px)}
   .card.shut{opacity:.55}
   .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--off)}
@@ -103,6 +126,18 @@
   .tag.been{background:rgba(111,214,255,.1);color:var(--accent2);border-color:rgba(111,214,255,.25)}
   button.lk{font-family:inherit;cursor:pointer}
   button.lk:hover{color:var(--ok);border-color:var(--ok)}
+
+  /* personal notes */
+  .mynote{position:relative}
+  .nbox{width:100%;resize:none;overflow:hidden;font-family:inherit;font-size:12.5px;line-height:1.55;
+    background:var(--bg2);color:var(--txt);border:1px dashed var(--line);border-radius:9px;
+    padding:8px 11px 8px 26px;transition:.15s}
+  .nbox::placeholder{color:#557089}
+  .nbox:hover{border-color:var(--dim2)}
+  .nbox:focus{outline:none;border-style:solid;border-color:var(--accent);background:var(--bg)}
+  .mynote::before{content:"✎";position:absolute;left:9px;top:8px;font-size:12px;color:var(--dim2);pointer-events:none}
+  .mynote.has .nbox{border-style:solid;border-color:rgba(56,208,200,.35);background:rgba(56,208,200,.06)}
+  .mynote.has::before{color:var(--accent)}
 
   /* season-pass tracker */
   .passbox{background:linear-gradient(135deg,rgba(62,201,138,.09),rgba(56,208,200,.05));
@@ -203,6 +238,7 @@
       <button class="chip" data-v="lap">Lap swimming</button>
       <button class="chip" data-v="sauna">Sauna</button>
       <button class="chip" data-v="pass">In my pass</button>
+      <button class="chip" data-v="notes">My notes</button>
       <button class="chip" data-v="cheap">Under €12</button>
       <button class="chip" data-v="early">Early swim</button>
     </div>
@@ -240,6 +276,7 @@
 <footer>
   <div><b style="color:var(--dim)">Live occupancy</b> comes from the City of Vienna Bäderampel open-data layer (<code>SCHWIMMBADOGD</code>), the exact same feed wien.gv.at uses. It refreshes through the day and also carries a 3-day outlook. Pools run by other operators (Stadthallenbad, Stadionbad, Therme Wien, Badeschiff) are in the feed but the city does not publish occupancy for them — those show grey.</div>
   <div style="margin-top:8px"><b style="color:var(--dim)">Hours &amp; prices</b> were checked against official sources on 29 July 2026 and reflect the late-July/August 2026 schedule. Vienna's pools change hours constantly for maintenance, swim courses and heatwaves — the "official page" link on each card is always the truth. Outdoor pools can close from 15:00 in bad weather (Gänsehäufel from 17:00).</div>
+  <div style="margin-top:8px"><b style="color:var(--dim)">Photos</b> are freely licensed images from Wikimedia Commons — 30 of the 55 places have one, and each caption credits the photographer and licence and links to the source. The remaining 25 are hotels, gyms and small district baths for which no freely licensed photograph exists, so they show a satellite view instead (© Mapbox © Maxar), with a link to the operators' own photos on Google Maps. No copyrighted images are hosted or hotlinked here.</div>
   <div style="margin-top:8px">Sources: <a href="https://www.wien.gv.at/spezial/baederampel/">Bäderampel</a> · <a href="https://www.wien.gv.at/freizeit/baeder">Wiener Bäder</a> · <a href="https://www.wien.gv.at/freizeit/baeder-eintrittspreise">Eintrittspreise</a> · <a href="https://www.wienersportstaetten.at/">Wiener Sportstätten</a> · <a href="https://thermewien.at/">Therme Wien</a> · <a href="https://www.badeschiff.at/">Badeschiff</a></div>
 </footer>
 </div>
@@ -260,7 +297,25 @@ PASS.breakEven = Math.ceil(PASS.cost / PASS.dayTicket);   // 21 visits
 /* Visit log. Browser storage is used when the page is hosted; when it isn't
    available (sandboxed preview) the log simply lives for the session. */
 const STORE = "swimwien.visits.v1";
+const NSTORE = "swimwien.notes.v1";
 let VISITS = [];
+let NOTES = {};          // pool id -> your own text
+
+function loadNotes(){
+  try{ NOTES = JSON.parse(localStorage.getItem(NSTORE) || "{}"); }
+  catch(e){ NOTES = {}; }
+}
+function saveNotes(){
+  try{ localStorage.setItem(NSTORE, JSON.stringify(NOTES)); }catch(e){}
+}
+function setNote(id, text){
+  text = (text||"").trim();
+  if(text) NOTES[id] = text; else delete NOTES[id];
+  saveNotes();
+}
+function esc(t){
+  return String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
 function loadVisits(){
   try{ VISITS = JSON.parse(localStorage.getItem(STORE) || "[]"); }
   catch(e){ VISITS = []; }
@@ -1039,6 +1094,12 @@ function wxRow(p, now){
          '</span><span class="r">'+w.rain+'% rain'+(hint?' · '+hint:'')+'</span></div>';
 }
 
+/* opens the place on Google Maps, where its photo gallery lives */
+function photosUrl(p){
+  return "https://www.google.com/maps/search/?api=1&query="+
+         encodeURIComponent(p.name+", "+p.addr);
+}
+
 function mapUrl(p){
   return "https://www.google.com/maps/dir/?api=1&origin="+HOME.q+
          "&destination="+encodeURIComponent(p.addr)+"&travelmode=transit";
@@ -1051,6 +1112,7 @@ function applyFilters(st, now){
   if(st.feats.has("lap"))   list = list.filter(p=>p.lap);
   if(st.feats.has("sauna")) list = list.filter(p=>p.sauna && !saunaShut(p, now));
   if(st.feats.has("pass"))  list = list.filter(p=>p.covered);
+  if(st.feats.has("notes")) list = list.filter(p=>NOTES[p.id]);
   if(st.feats.has("cheap")) list = list.filter(p=>p.covered || (p.price!==null && p.price<12));
   if(st.feats.has("early")) list = list.filter(p=>p.early);
   list = list.filter(p=>p.min<=st.maxTime);
@@ -1083,7 +1145,10 @@ function paintChipCounts(now){
 }
 
 /* ---------------- render ---------------- */
+let TYPING = false;
 function render(){
+  /* never redraw mid-sentence — a background refresh would wipe the note */
+  if(TYPING) return;
   const now = new Date();
   const grid = document.getElementById("grid");
   let list = applyFilters(state, now);
@@ -1150,7 +1215,26 @@ function render(){
       ? '<div class="note bad">'+ (p.closed?p.closed.why:"Closed") +'</div>'
       : (p.note ? '<div class="note">'+p.note+'</div>' : "");
 
+    const ph = PHOTOS[p.id];
+    const air = ph ? null : aerialUrl(p);
+    let photoHtml;
+    if(ph){
+      photoHtml = '<div class="photo"><img src="'+ph.u+'" alt="'+esc(p.name)+' — '+esc(ph.cap)+'" loading="lazy" decoding="async" '+
+        'onerror="this.closest(\'.photo\').remove()">'+
+        '<a class="credit" href="'+ph.pg+'" target="_blank" rel="noopener" title="Photo source and licence">'+
+        esc(ph.cap)+' · '+esc(ph.by)+' / '+esc(ph.lic)+'</a></div>';
+    } else if(air){
+      photoHtml = '<div class="photo aerial"><img src="'+air+'" alt="Aerial view of '+esc(p.name)+'" loading="lazy" decoding="async" '+
+        'onerror="this.closest(\'.photo\').classList.add(\'failed\')">'+
+        '<a class="credit" href="'+photosUrl(p)+'" target="_blank" rel="noopener">'+
+        'Aerial view — no free photo exists · © Mapbox © Maxar · tap for Google Maps photos</a></div>';
+    } else {
+      photoHtml = '<a class="photo none" href="'+photosUrl(p)+'" target="_blank" rel="noopener">'+
+        '<span>No free photo — see photos on Google Maps →</span></a>';
+    }
+
     return `<div class="card ${o.cls}${shut}">
+      ${photoHtml}
       <div class="top">
         <div><div class="nm">${p.name}</div><div class="addr">${p.addr}</div></div>
         <div class="tt"><div class="big">${p.min}</div><div class="u">min away</div></div>
@@ -1169,9 +1253,14 @@ function render(){
         saunaShut(p,now) ? '<span class="tag shutx">Sauna shut until '+fmtDay(p.saunaClosed.to)+'</span>' : ""
       }${p.tags.map(t=>'<span class="tag">'+t+'</span>').join("")}</div>
       ${noteHtml}
+      <div class="mynote ${NOTES[p.id]?'has':''}">
+        <textarea class="nbox" data-id="${p.id}" rows="1"
+          placeholder="Your notes — lane etiquette, best hour, locker tips…">${NOTES[p.id]?esc(NOTES[p.id]):""}</textarea>
+      </div>
       <div class="links">
         <a class="lk go" href="${mapUrl(p)}" target="_blank" rel="noopener">Directions →</a>
         <a class="lk" href="${p.url}" target="_blank" rel="noopener">Official page</a>
+        <a class="lk" href="${photosUrl(p)}" target="_blank" rel="noopener">Photos</a>
         <button class="lk logv" data-id="${p.id}" title="Log a visit">＋ Swam here</button>
       </div>
     </div>`;
@@ -1184,11 +1273,91 @@ function render(){
   grid.querySelectorAll(".logv").forEach(b=>{
     b.onclick = () => logVisit(b.dataset.id);
   });
+
+  /* personal notes: grow with the text, save as you type, no save button */
+  grid.querySelectorAll(".nbox").forEach(t=>{
+    const grow = () => { t.style.height = "auto"; t.style.height = (t.scrollHeight+2)+"px"; };
+    grow();
+    t.addEventListener("input", ()=>{
+      grow();
+      setNote(t.dataset.id, t.value);
+      t.closest(".mynote").classList.toggle("has", !!t.value.trim());
+      paintChipCounts(new Date());
+    });
+    /* don't let a re-render wipe what you're typing */
+    t.addEventListener("focus", ()=>{ TYPING = true; });
+    t.addEventListener("blur",  ()=>{ TYPING = false; });
+  });
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+   PASTE YOUR MAPBOX TOKEN BETWEEN THE QUOTES BELOW.
+   Get one free at mapbox.com → sign up → Tokens → copy the "Default public
+   token" (starts with pk.). No payment card needed; the free tier allows
+   50,000 static images a month and this page uses about 25 per visit.
+   Leave it empty and the 25 places without a photo just show a link instead.
+   ───────────────────────────────────────────────────────────────────── */
+const MAPBOX_TOKEN = "";
+
+function aerialUrl(p){
+  if(!MAPBOX_TOKEN || typeof p.lat !== "number") return null;
+  /* tighter zoom for a single building, wider for a lake or park bath */
+  const z = (p.kind === "spa" || p.kind === "wellness" || p.kind === "indoor") ? 17.5 : 16.5;
+  return "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/"+
+         p.lon+","+p.lat+","+z+",0/640x280@2x?access_token="+MAPBOX_TOKEN;
+}
+
+/* Photos — freely licensed, from Wikimedia Commons. Every URL was checked to
+   return HTTP 200 with image content. Credit is required by CC BY / CC BY-SA,
+   which is why the author and licence appear under each picture.
+   Note: Commons only serves hotlinked thumbnails at fixed widths (…960px… here);
+   changing the number in the URL breaks the image. */
+const PHOTOS = {
+ amalienbad:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Amalienbad%2C_Wien_4.jpg/960px-Amalienbad%2C_Wien_4.jpg",by:"Thomas Ledl",lic:"CC BY 4.0",cap:"The 1926 facade and clock tower",pg:"https://commons.wikimedia.org/wiki/File:Amalienbad,_Wien_4.jpg"},
+ theresienbad:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Theresienbad_1.JPG/960px-Theresienbad_1.JPG",by:"Thomas Ledl",lic:"CC BY-SA 3.0",cap:"Entrance building, Meidling",pg:"https://commons.wikimedia.org/wiki/File:Theresienbad_1.JPG"},
+ floridsdorfer:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Hallenbadfloridsdorf.JPG/960px-Hallenbadfloridsdorf.JPG",by:"Clemens Mosch",lic:"CC BY-SA 4.0",cap:"Indoor pool building exterior",pg:"https://commons.wikimedia.org/wiki/File:Hallenbadfloridsdorf.JPG"},
+ huetteldorf:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Hallenbad_Huetteldorf_02.JPG/960px-Hallenbad_Huetteldorf_02.JPG",by:"Wolfgang Glock",lic:"CC BY-SA 3.0",cap:"The 25 m pool with lanes",pg:"https://commons.wikimedia.org/wiki/File:Hallenbad_Huetteldorf_02.JPG"},
+ brigittenau:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Brigittenauer_Bad_02.jpg/960px-Brigittenauer_Bad_02.jpg",by:"Funke",lic:"CC BY-SA 4.0",cap:"Hallenbad building with signage",pg:"https://commons.wikimedia.org/wiki/File:Brigittenauer_Bad_02.jpg"},
+ simmering:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/GuentherZ_2012-05-09_0117_Wien11_Florian-Hedorfer-Strasse_SimmeringerBad.jpg/960px-GuentherZ_2012-05-09_0117_Wien11_Florian-Hedorfer-Strasse_SimmeringerBad.jpg",by:"GuentherZ",lic:"CC BY 3.0",cap:"The complex on Florian-Hedorfer-Straße",pg:"https://commons.wikimedia.org/wiki/File:GuentherZ_2012-05-09_0117_Wien11_Florian-Hedorfer-Strasse_SimmeringerBad.jpg"},
+ doebling:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/GuentherZ_2011-03-29_2090_Wien19_Hallenbad_Doebling.jpg/960px-GuentherZ_2011-03-29_2090_Wien19_Hallenbad_Doebling.jpg",by:"GuentherZ",lic:"CC BY 3.0",cap:"Hallenbad Döbling exterior",pg:"https://commons.wikimedia.org/wiki/File:GuentherZ_2011-03-29_2090_Wien19_Hallenbad_Doebling.jpg"},
+ hietzing:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Freibad_Hietzing.JPG/960px-Freibad_Hietzing.JPG",by:"Thomas Ledl",lic:"CC BY-SA 4.0",cap:"Changing cabins behind the lawn",pg:"https://commons.wikimedia.org/wiki/File:Freibad_Hietzing.JPG"},
+ joerger:{u:"https://upload.wikimedia.org/wikipedia/commons/b/bd/J%C3%B6rgerbad_Eingangshalle.JPG",by:"Thomas Ledl",lic:"CC BY-SA 3.0 AT",cap:"The Art Nouveau entrance hall",pg:"https://commons.wikimedia.org/wiki/File:J%C3%B6rgerbad_Eingangshalle.JPG"},
+ laaerberg:{u:"https://upload.wikimedia.org/wikipedia/commons/8/82/GuentherZ_2009-08-25_1228_Laaerbergbad_Eingang.jpg",by:"GuentherZ",lic:"CC BY 3.0",cap:"Entrance and locker pavilion",pg:"https://commons.wikimedia.org/wiki/File:GuentherZ_2009-08-25_1228_Laaerbergbad_Eingang.jpg"},
+ kongress:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Wien_16_Kongressbad_c.jpg/960px-Wien_16_Kongressbad_c.jpg",by:"Gugerell",lic:"CC0",cap:"The striped 1928 entrance building",pg:"https://commons.wikimedia.org/wiki/File:Wien_16_Kongressbad_c.jpg"},
+ schafberg:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Schafbergbad_Hans-Bock-Park.png/960px-Schafbergbad_Hans-Bock-Park.png",by:"Funke",lic:"CC BY-SA 3.0",cap:"Seen from Hans-Bock-Park",pg:"https://commons.wikimedia.org/wiki/File:Schafbergbad_Hans-Bock-Park.png"},
+ hoepfler:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/H%C3%B6pflerbad_01.jpg/960px-H%C3%B6pflerbad_01.jpg",by:"Funke",lic:"CC BY-SA 4.0",cap:"Entrance building in Atzgersdorf",pg:"https://commons.wikimedia.org/wiki/File:H%C3%B6pflerbad_01.jpg"},
+ krapfenwaldl:{u:"https://upload.wikimedia.org/wikipedia/commons/a/af/Krapfenwaldbad-Vienna.jpg",by:"FermatSim",lic:"Public domain",cap:"The hillside pool with its view over Vienna",pg:"https://commons.wikimedia.org/wiki/File:Krapfenwaldbad-Vienna.jpg"},
+ gaensehaeufel:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/G%C3%A4nseh%C3%A4ufel_-_Weststrand.jpg/960px-G%C3%A4nseh%C3%A4ufel_-_Weststrand.jpg",by:"Daniel-tbs",lic:"CC BY-SA 4.0",cap:"The sandy west beach and lawn",pg:"https://commons.wikimedia.org/wiki/File:G%C3%A4nseh%C3%A4ufel_-_Weststrand.jpg"},
+ "strandbad-ad":{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Wien_-_Strandbad_Alte_Donau.JPG/960px-Wien_-_Strandbad_Alte_Donau.JPG",by:"C.Stadler/Bwag",lic:"CC BY-SA 4.0",cap:"Entrance to the Strandbad",pg:"https://commons.wikimedia.org/wiki/File:Wien_-_Strandbad_Alte_Donau.JPG"},
+ angelibad:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/GuentherZ_2013-05-22_0556_Wien_Angelibad.JPG/960px-GuentherZ_2013-05-22_0556_Wien_Angelibad.JPG",by:"GuentherZ",lic:"CC BY 3.0",cap:"Seen across the water",pg:"https://commons.wikimedia.org/wiki/File:GuentherZ_2013-05-22_0556_Wien_Angelibad.JPG"},
+ donauinsel:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/20210620_Neue_Donau_Familienstrand.jpg/960px-20210620_Neue_Donau_Familienstrand.jpg",by:"Funke",lic:"CC BY-SA 4.0",cap:"Family beach on the Neue Donau",pg:"https://commons.wikimedia.org/wiki/File:20210620_Neue_Donau_Familienstrand.jpg"},
+ "altedonau-free":{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Alte_Donau_Strand_003_%284279255848%29.jpg/960px-Alte_Donau_Strand_003_%284279255848%29.jpg",by:"János Korom Dr.",lic:"CC BY-SA 2.0",cap:"Bathers on the open shore",pg:"https://commons.wikimedia.org/wiki/File:Alte_Donau_Strand_003_(4279255848).jpg"},
+ stadthallenbad:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Das_Wiener_Stadthallenbad_nach_der_Renovierung_%282015%29.jpg/960px-Das_Wiener_Stadthallenbad_nach_der_Renovierung_%282015%29.jpg",by:"Schwimmschule Steiner",lic:"CC BY-SA 4.0",cap:"The 50 m pool after renovation",pg:"https://commons.wikimedia.org/wiki/File:Das_Wiener_Stadthallenbad_nach_der_Renovierung_(2015).jpg"},
+ stadionbad:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Stadionbad_Wien02.JPG/960px-Stadionbad_Wien02.JPG",by:"Praterstern",lic:"CC BY-SA 3.0",cap:"Slide and clock tower",pg:"https://commons.wikimedia.org/wiki/File:Stadionbad_Wien02.JPG"},
+ therme:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Therme_Wien_Vorplatz.jpg/960px-Therme_Wien_Vorplatz.jpg",by:"Linie29",lic:"CC BY-SA 3.0",cap:"Forecourt and main building",pg:"https://commons.wikimedia.org/wiki/File:Therme_Wien_Vorplatz.jpg"},
+ badeschiff:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Badeschiff-Wien_DSC1227w.jpg/960px-Badeschiff-Wien_DSC1227w.jpg",by:"Peter Haas",lic:"CC BY-SA 3.0",cap:"Moored in the Donaukanal",pg:"https://commons.wikimedia.org/wiki/File:Badeschiff-Wien_DSC1227w.jpg"},
+ schoenbrunn:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Sch%C3%B6nbrunner_Bad_01.jpg/960px-Sch%C3%B6nbrunner_Bad_01.jpg",by:"Herzi Pinki",lic:"CC BY-SA 4.0",cap:"The bath inside Schönbrunn park",pg:"https://commons.wikimedia.org/wiki/File:Sch%C3%B6nbrunner_Bad_01.jpg"},
+ bundesbad:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Wien_-_Bundesbad_Alte_Donau.JPG/960px-Wien_-_Bundesbad_Alte_Donau.JPG",by:"C.Stadler/Bwag",lic:"CC BY-SA 4.0",cap:"Entrance and ticket booths",pg:"https://commons.wikimedia.org/wiki/File:Wien_-_Bundesbad_Alte_Donau.JPG"},
+ stadlau:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/2017-06-18_AT_Wien_22_Donaustadt%2C_Unteres_M%C3%BChlwasser%2C_Strandbad_Stadlau_%2850100191653%29.jpg/960px-2017-06-18_AT_Wien_22_Donaustadt%2C_Unteres_M%C3%BChlwasser%2C_Strandbad_Stadlau_%2850100191653%29.jpg",by:"Paul Korecky",lic:"CC BY-SA 2.0",cap:"Grassy bank at the Mühlwasser",pg:"https://commons.wikimedia.org/wiki/File:2017-06-18_AT_Wien_22_Donaustadt,_Unteres_M%C3%BChlwasser,_Strandbad_Stadlau_(50100191653).jpg"},
+ apostelbad:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Apostelbad%2C_Vienna.jpg/960px-Apostelbad%2C_Vienna.jpg",by:"Herzi Pinki",lic:"CC BY-SA 4.0",cap:"The bath building on Apostelgasse",pg:"https://commons.wikimedia.org/wiki/File:Apostelbad,_Vienna.jpg"},
+ hermannbad:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Amtshaus_Hermanngasse_03_Bad.jpg/960px-Amtshaus_Hermanngasse_03_Bad.jpg",by:"Wolfgang Glock",lic:"CC BY-SA 3.0",cap:"Municipal bath doorway on Hermanngasse",pg:"https://commons.wikimedia.org/wiki/File:Amtshaus_Hermanngasse_03_Bad.jpg"},
+ einsiedlerbad:{u:"https://upload.wikimedia.org/wikipedia/commons/3/34/GuentherZ_2006-11-24_Wien05_Volksbad_Einsiedlerplatz_1114.jpg",by:"GuentherZ",lic:"CC BY-SA 3.0",cap:"The Volksbad at Einsiedlerplatz",pg:"https://commons.wikimedia.org/wiki/File:GuentherZ_2006-11-24_Wien05_Volksbad_Einsiedlerplatz_1114.jpg"},
+ sargfabrik:{u:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Wien-Penzing_-_Wohn-_und_Kulturprojekt_Sargfabrik_-_13_-_Badehaus.jpg/960px-Wien-Penzing_-_Wohn-_und_Kulturprojekt_Sargfabrik_-_13_-_Badehaus.jpg",by:"Haeferl",lic:"CC BY-SA 3.0",cap:"The tiled pool of the Badehaus",pg:"https://commons.wikimedia.org/wiki/File:Wien-Penzing_-_Wohn-_und_Kulturprojekt_Sargfabrik_-_13_-_Badehaus.jpg"}
+};
+
+const POOL_BY_ID = {};
+function indexPools(){ POOLS.forEach(p=>POOL_BY_ID[p.id]=p); }
 
 function renderPass(now){
   const el = document.getElementById("pass");
-  const n = VISITS.length;
+  /* only visits to pools the pass actually covers count toward break-even */
+  const onPass = VISITS.filter(v => POOL_BY_ID[v.id] && POOL_BY_ID[v.id].covered);
+  const paid   = VISITS.filter(v => !POOL_BY_ID[v.id] || !POOL_BY_ID[v.id].covered);
+  const paidSpend = paid.reduce((s,v)=>{
+    const p = POOL_BY_ID[v.id];
+    return s + (p && typeof p.price === "number" ? p.price : 0);
+  }, 0);
+  const n = onPass.length;
   const value = n * PASS.dayTicket;
   const ahead = value - PASS.cost;
   const pct = Math.min(100, (n / PASS.breakEven) * 100);
@@ -1218,9 +1387,12 @@ function renderPass(now){
        '<div><div class="plabel">'+PASS.name+'</div>'+
          '<div class="pmeta">Valid to '+end.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})+
          ' · '+daysLeft+' days left · sauna and non-city pools not included</div></div>'+
-       '<div class="pnum"><span class="pv">'+n+'</span><span class="pu">visit'+(n===1?'':'s')+' logged</span></div>'+
+       '<div class="pnum"><span class="pv">'+n+' / '+PASS.breakEven+'</span><span class="pu">visits on the pass</span></div>'+
        '<div class="pnum"><span class="pv">€'+value.toFixed(2)+'</span><span class="pu">of €'+PASS.cost.toFixed(2)+' used</span></div>'+
-       (n ? '<button class="btn" id="undoVisit">Undo last</button>' : '')+
+       (paid.length ? '<div class="pnum"><span class="pv">€'+paidSpend.toFixed(2)+'</span><span class="pu">'+
+          paid.length+' paid visit'+(paid.length===1?'':'s')+'</span></div>' : '')+
+       (VISITS.length ? '<button class="btn" id="undoVisit">Undo last</button>'+
+          '<button class="btn" id="resetVisits" title="Clear the whole log">Reset</button>' : '')+
      '</div>'+
      '<div class="pbar"><i style="width:'+pct+'%" class="'+(ahead>=0?'done':'')+'"></i></div>'+
      '<div class="pverdict">'+verdict+'</div>'+
@@ -1230,6 +1402,8 @@ function renderPass(now){
 
   const u = document.getElementById("undoVisit");
   if(u) u.onclick = undoVisit;
+  const r = document.getElementById("resetVisits");
+  if(r) r.onclick = () => { VISITS = []; saveVisits(); render(); };
 }
 
 function activeFilterLabels(){
@@ -1358,7 +1532,9 @@ document.getElementById("refresh").addEventListener("click",loadLive);
 document.getElementById("today").textContent =
   new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 
+indexPools();
 loadVisits();
+loadNotes();
 loadLive();
 setInterval(loadLive, 10*60*1000);   // refresh every 10 min
 setInterval(render, 60*1000);        // keep open/closed accurate
