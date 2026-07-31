@@ -43,7 +43,23 @@
   .btn:hover{border-color:var(--accent);color:var(--accent)}
 
   /* controls */
-  .controls{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:18px;position:sticky;top:0;z-index:20;backdrop-filter:blur(8px);background:rgba(20,40,58,.94)}
+  .controls{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:18px;position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:rgba(20,40,58,.96);transition:padding .18s}
+
+  /* collapsed state — once you scroll, the bar shrinks to one slim line
+     so it stops covering the cards behind it */
+  .minibar{display:none;width:100%;align-items:center;gap:10px;background:none;border:0;
+    padding:0;font-family:inherit;color:var(--txt);cursor:pointer;text-align:left}
+  .controls.compact{padding:9px 14px}
+  .controls.compact .minibar{display:flex}
+  .controls.compact .crow{display:none}
+  .controls.compact.open .crow{display:flex}
+  .controls.compact.open .crow:first-of-type{margin-top:11px;padding-top:11px;border-top:1px solid var(--line)}
+  .minibar .mb-l{font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--dim2);font-weight:600;flex:none}
+  .minibar .mb-s{font-size:13px;color:var(--accent);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .minibar .mb-n{margin-left:auto;font-size:12.5px;color:var(--dim2);flex:none}
+  .minibar .mb-c{flex:none;color:var(--dim2);font-size:15px;transition:transform .18s;line-height:1}
+  .controls.compact.open .mb-c{transform:rotate(180deg)}
+  .minibar:hover .mb-c{color:var(--accent)}
   .crow{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
   .crow + .crow{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
   .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim2);margin-right:2px;font-weight:600}
@@ -194,7 +210,8 @@
     header{gap:9px;margin-bottom:12px}
     .livebox{padding:5px 11px;font-size:11.5px} .btn{padding:5px 10px;font-size:11.5px}
     .grid{grid-template-columns:1fr;gap:11px}
-    .controls{padding:10px 11px;margin-bottom:12px;position:sticky;top:0;max-height:44vh;overflow-y:auto}
+    .controls{padding:10px 11px;margin-bottom:12px;position:sticky;top:0}
+    .controls.compact.open{max-height:62vh;overflow-y:auto}
     .crow{gap:7px} .crow + .crow{margin-top:8px;padding-top:8px}
     .lbl{font-size:10px;width:100%;margin-bottom:-2px}
     .chip{padding:4px 10px;font-size:12px}
@@ -223,6 +240,12 @@
 </header>
 
 <div class="controls">
+  <button class="minibar" id="fToggle" aria-expanded="false">
+    <span class="mb-l">Filters</span>
+    <span class="mb-s" id="mbSummary">All places</span>
+    <span class="mb-n" id="mbCount"></span>
+    <span class="mb-c">⌄</span>
+  </button>
   <div class="crow">
     <span class="lbl">Show</span>
     <div class="chips" id="fType">
@@ -1168,6 +1191,9 @@ function render(){
   list.sort((a,b)=> (openState(a,now).hard?1:0) - (openState(b,now).hard?1:0));
 
   document.getElementById("count").textContent = list.length+" of "+POOLS.length+" places";
+  const lbls = activeFilterLabels();
+  document.getElementById("mbSummary").textContent = lbls.length ? lbls.join(" · ") : "All places";
+  document.getElementById("mbCount").textContent = list.length+" of "+POOLS.length;
 
   renderPass(now);
 
@@ -1528,6 +1554,34 @@ document.getElementById("fTime").addEventListener("input",e=>{
 });
 document.getElementById("sort").addEventListener("change",e=>{state.sort=e.target.value;render();});
 document.getElementById("refresh").addEventListener("click",loadLive);
+
+/* collapse the filter bar as soon as the page is scrolled */
+(function(){
+  const c = document.querySelector(".controls");
+  const t = document.getElementById("fToggle");
+  let compact = false;
+  const onScroll = () => {
+    const want = window.scrollY > 90;
+    if(want === compact) return;
+    compact = want;
+    c.classList.toggle("compact", compact);
+    if(!compact){ c.classList.remove("open"); t.setAttribute("aria-expanded","false"); }
+  };
+  window.addEventListener("scroll", onScroll, {passive:true});
+  onScroll();
+  t.addEventListener("click", ()=>{
+    const open = c.classList.toggle("open");
+    t.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  /* picking a filter closes the panel again so you can see the results */
+  document.querySelectorAll("#fType, #fFeat, #fOpen").forEach(g=>{
+    g.addEventListener("click", e=>{
+      if(e.target.closest(".chip") && c.classList.contains("compact")){
+        c.classList.remove("open"); t.setAttribute("aria-expanded","false");
+      }
+    });
+  });
+})();
 
 document.getElementById("today").textContent =
   new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
